@@ -1,0 +1,4 @@
+[submodule "crst01a_arduino_lib"]
+	path = crst01a_arduino_lib
+	url = git@github.com:CuboRex-Development/crst01a_arduino_lib.git
+	branch = main
