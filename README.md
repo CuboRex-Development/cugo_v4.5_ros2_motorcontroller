@@ -25,6 +25,8 @@ ROS 2で CuGo V4.5 を制御するArduinoスケッチです。
 
 cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ `cugo_v4.5_ros2_control` から受信した目標速度指令を ロボットに内臓された車両コントローラ CRST01A に転送し、現在の走行速度をROS側に返答するインターフェースモジュールです。
 
+上位PCとの通信トランスポートとして、**Serial（USB CDC）** と **WiFi（TCP）** を選択できます。コンパイル時に `USE_WIFI` を定義することで切り替えられます。パケットの中身（COBSエンコード・プロトコル）はどちらのモードでも共通です。
+
 
 # Requirements
 
@@ -57,7 +59,35 @@ cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ `cugo_v4.5_ros2_contro
 
 6. CuGo V4.5 に搭載された基板のDIPスイッチを、RPiモードに設定します。
 
+## WiFiモードで使用する場合の追加手順
+
+5-a. スケッチ冒頭のトランスポート設定で `USE_WIFI` のコメントを外し、SSID・パスワード・ポート番号を設定します。
+
+   ```cpp
+   #define USE_WIFI
+   #define WIFI_SSID       "your_ssid"
+   #define WIFI_PASSWORD   "your_password"
+   #define WIFI_TCP_PORT   (8080)
+   ```
+
+   IPアドレスを固定する場合は、`WIFI_STATIC_IP` のコメントも外して各アドレスを設定します。
+
+   ```cpp
+   #define WIFI_STATIC_IP
+   #define WIFI_IP         IPAddress(192, 168, 1, 100)
+   #define WIFI_GATEWAY    IPAddress(192, 168, 1,   1)
+   #define WIFI_SUBNET     IPAddress(255, 255, 255,  0)
+   ```
+
+5-b. スケッチを書き込んだあと、Ubuntu PC に `socat` をインストールします。
+
+   ```bash
+   sudo apt install socat
+   ```
+
 # Usage
+
+## Serial モード（デフォルト）
 
 1. CuGo V4.5 の Raspberry Pi Pico 2 WH と PC を USB ケーブルで接続します。
 
@@ -67,6 +97,29 @@ cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ `cugo_v4.5_ros2_contro
 
 > [!TIP]
 > 通信が正常に確立されない場合は、USB ケーブルを抜き差しして再接続してください。
+
+## WiFi モード
+
+1. Pico 2 WH が WiFi ネットワークに接続されたあと、`socat` で仮想シリアルポートを作成します。Pico の IP アドレスと設定したポート番号を指定してください。
+
+   ```bash
+   sudo socat pty,link=/dev/ttyPICO,rawer TCP:<Pico_IP>:<WIFI_TCP_PORT>
+   ```
+
+   例:
+
+   ```bash
+   sudo socat pty,link=/dev/ttyPICO,rawer TCP:192.168.1.100:8080
+   ```
+
+2. 別ターミナルで ROS 2パッケージ `cugo_v4.5_ros2_control` を起動する際、シリアルポートとして `/dev/ttyPICO` を指定します。
+
+3. `/cmd_vel` トピックに速度指令を送ると、ロボットが動作します。
+
+> [!NOTE]
+> Pico の IP アドレスは、ルータの管理画面またはシリアルモニタで確認できます。
+>
+> socat を終了すると通信が切断されます。再接続するには socat を再起動してください。
 
 
 # Architecture

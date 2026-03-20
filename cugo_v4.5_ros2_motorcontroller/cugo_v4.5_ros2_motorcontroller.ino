@@ -17,7 +17,34 @@
 //   crst01a_arduino_lib : CRST01A操作SDK
 //
 // プロトコル: ロボット-ROS通信仕様 プロトコル識別子1 (プロダクトID 10000)
+
+// ----------------------------------------------------------------------------
+// トランスポート設定
+// WiFiを使用する場合は以下の行のコメントを外してください。デフォルトはSerialです。
+// ----------------------------------------------------------------------------
+// #define USE_WIFI
+
+#ifdef USE_WIFI
+#define WIFI_SSID       "your_ssid"
+#define WIFI_PASSWORD   "your_password"
+#define WIFI_TCP_PORT   (8080)
+
+// 接続状況と自身のIPをUSBシリアルに出力する場合は以下の行のコメントを外してください
+// #define WIFI_DEBUG_SERIAL
+
+// 静的IPを使用する場合は以下の行のコメントを外してください
+// #define WIFI_STATIC_IP
+// #ifdef WIFI_STATIC_IP
+#define WIFI_IP         IPAddress(192, 168,  0, 101)
+#define WIFI_GATEWAY    IPAddress(192, 168,  0,   1)
+#define WIFI_SUBNET     IPAddress(255, 255, 255,  0)
+#endif
+#endif
+
 #include <PacketSerial.h>
+#ifdef USE_WIFI
+#include <WiFi.h>
+#endif
 #include "Crst01a.h"
 #include "RosComm.h"
 
@@ -75,6 +102,11 @@ void Job1000ms(void) {
 #define FAILSAFE_COUNT_MAX  (5)
 
 PacketSerial packetSerial;
+
+#ifdef USE_WIFI
+WiFiServer wifiServer(WIFI_TCP_PORT);
+WiFiClient wifiClient;
+#endif
 
 // タイムスタンプ (オーバーフローしても符号なし演算で正常に動作する)
 unsigned long long currentTime = 0;
@@ -216,6 +248,31 @@ void setup() {
 	// 走行状態 (0x81) の定期受信を有効化 (50Hz)
 	crst01a.SetCycleReq(CRST_FUNC_READ_RUN_STATUS);
 
+#ifdef USE_WIFI
+	// WiFi接続
+#ifdef WIFI_DEBUG_SERIAL
+	Serial.begin(115200);
+	Serial.print("Connecting to WiFi");
+#endif
+#ifdef WIFI_STATIC_IP
+	WiFi.config(WIFI_IP, WIFI_GATEWAY, WIFI_SUBNET);
+#endif
+	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+	while (WiFi.status() != WL_CONNECTED) {
+#ifdef WIFI_DEBUG_SERIAL
+		Serial.print(".");
+#endif
+		delay(100);
+	}
+#ifdef WIFI_DEBUG_SERIAL
+	Serial.println();
+	Serial.print("Connected. IP: ");
+	Serial.println(WiFi.localIP());
+#endif
+	// TCPサーバ起動 (クライアントとのストリーム接続はループ内で行う)
+	wifiServer.begin();
+	packetSerial.setPacketHandler(&OnSerialPacketReceived);
+#else
 	// PacketSerial初期化 (COBSエンコード/デコード、USB CDC Serial使用)
 	packetSerial.begin(115200);
 	packetSerial.setStream(&Serial);
@@ -226,6 +283,7 @@ void setup() {
 	while (Serial.available() > 0) {
 		Serial.read();
 	}
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -249,6 +307,27 @@ void loop() {
 		prevTime1000ms = currentTime;
 	}
 
+#ifdef USE_WIFI
+	// WiFiクライアント管理 (接続・再接続処理)
+	if (!wifiClient.connected()) {
+		WiFiClient newClient = wifiServer.accept();
+		if (newClient) {
+			wifiClient = newClient;
+			packetSerial.setStream(&wifiClient);
+			// 新規クライアント接続: ハンドシェイク状態をリセット
+			handshakeDoneF = false;
+			failsafeActiveF = false;
+			comFailCount = 0;
+		}
+	}
+	// PacketSerial受信処理 (クライアント接続中のみ)
+	if (wifiClient.connected()) {
+		packetSerial.update();
+		if (packetSerial.overflow()) {
+			// 現状は無視 (必要に応じてエラー通知等を追加)
+		}
+	}
+#else
 	// PacketSerial受信処理 (受信完了でOnSerialPacketReceivedを呼び出す)
 	packetSerial.update();
 
@@ -256,4 +335,5 @@ void loop() {
 	if (packetSerial.overflow()) {
 		// 現状は無視 (必要に応じてエラー通知等を追加)
 	}
+#endif
 }
