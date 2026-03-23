@@ -2,7 +2,7 @@
 
 ROS 2で CuGo V4.5 を制御するArduinoスケッチです。
 
-セットでROS 2パッケージの [cugo_v4.5_ros2_control](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control) と使用します。
+ROS 2パッケージ [cugo_v4.5_ros2_control](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control) とセットで使用します。アプリケーションの全容や ROS PC 側の作業手順は [cugo_v4.5_ros2_control](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control) を参照してください。
 
 > [!WARNING]
 > このArduinoスケッチは CuGo V4.5 専用です。
@@ -14,7 +14,7 @@ ROS 2で CuGo V4.5 を制御するArduinoスケッチです。
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
-- [Usage](#usage)
+- [Configuration](#configuration)
 - [Architecture](#architecture)
 - [Protocol](#protocol)
 - [Note](#note)
@@ -23,9 +23,9 @@ ROS 2で CuGo V4.5 を制御するArduinoスケッチです。
 
 # Features
 
-cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ `cugo_v4.5_ros2_control` から受信した目標速度指令を ロボットに内臓された車両コントローラ CRST01A に転送し、現在の走行速度をROS側に返答するインターフェースモジュールです。
+cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ `cugo_v4.5_ros2_control` から受信した目標速度指令をロボットに内蔵された車両コントローラ CRST01A に転送し、現在の走行速度をROS側に返答するインターフェースモジュールです。
 
-上位PCとの通信トランスポートとして、**Serial（USB CDC）** と **WiFi（TCP）** を選択できます。コンパイル時に `USE_WIFI` を定義することで切り替えられます。パケットの中身（COBSエンコード・プロトコル）はどちらのモードでも共通です。
+上位PCとの通信トランスポートとして、USB-Serial と WiFi（外部ルータ経由） を選択できます。設定は `config.h` の 1行を変更するだけで切り替えられます。パケットの中身（COBSエンコード・プロトコル）はどちらのモードでも共通です。
 
 
 # Requirements
@@ -49,77 +49,66 @@ cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ `cugo_v4.5_ros2_contro
    git clone --recurse-submodules <repository-url>
    ```
 
-2. Arduino IDE で `cugo_v4.5_ros2_motorcontroller/cugo_v4.5_ros2_motorcontroller.ino` を開きます。
+2. Arduino IDE のライブラリマネージャから `PacketSerial` をインストールします。
 
-3. Arduino IDE のライブラリマネージャから `PacketSerial` をインストールします。
+3. `crst01a_arduino_lib` を Arduino IDE のライブラリとして追加します。
 
-4. `crst01a_arduino_lib` を Arduino IDE のライブラリとして追加します。
+4. `cugo_v4.5_ros2_motorcontroller/cugo_v4.5_ros2_motorcontroller.ino` を Arduino IDE で開きます。
 
-5. ボードを Raspberry Pi Pico 2 / Pico 2W に設定し、スケッチを書き込みます。
+5. CuGo V4.5 に搭載された基板の DIP スイッチを RPi モードに設定します。
 
-6. CuGo V4.5 に搭載された基板のDIPスイッチを、RPiモードに設定します。
 
-## WiFiモードで使用する場合の追加手順
+# Configuration
 
-5-a. スケッチ冒頭のトランスポート設定で `USE_WIFI` のコメントを外し、SSID・パスワード・ポート番号を設定します。
+編集するファイルは `config.h` のみです。それ以外のソースファイルを編集する必要はありません。
 
-   ```cpp
-   #define USE_WIFI
-   #define WIFI_SSID       "your_ssid"
-   #define WIFI_PASSWORD   "your_password"
-   #define WIFI_TCP_PORT   (8080)
-   ```
+## USB-Serial モード（デフォルト）
 
-   IPアドレスを固定する場合は、`WIFI_STATIC_IP` のコメントも外して各アドレスを設定します。
+追加設定は不要です。`config.h` の `USE_WIFI` 行がコメントアウトされていることを確認してください。
 
-   ```cpp
-   #define WIFI_STATIC_IP
-   #define WIFI_IP         IPAddress(192, 168, 1, 100)
-   #define WIFI_GATEWAY    IPAddress(192, 168, 1,   1)
-   #define WIFI_SUBNET     IPAddress(255, 255, 255,  0)
-   ```
+```cpp
+// #define USE_WIFI   ← コメントアウトのまま (USB-Serial モード)
+```
 
-5-b. スケッチを書き込んだあと、Ubuntu PC に `socat` をインストールします。
+スケッチを書き込んだ後、USB ケーブルで Pico 2 WH と PC を接続してください。
 
-   ```bash
-   sudo apt install socat
-   ```
+| 接続先 | ケーブル | ポート |
+|--------|----------|--------|
+| PC（ROS 2） ↔ Pico 2 WH | USB ケーブル | USB（Pico の USB-C または Micro-USB 端子） |
 
-# Usage
+その後の ROS PC 側の手順は [cugo_v4.5_ros2_control](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control) を参照してください。
 
-## Serial モード（デフォルト）
+## WiFi モード（外部ルータ経由）
 
-1. CuGo V4.5 の Raspberry Pi Pico 2 WH と PC を USB ケーブルで接続します。
+`config.h` の `USE_WIFI` のコメントを外し、接続先のWiFi情報を設定します。
 
-2. ROS 2パッケージ `cugo_v4.5_ros2_control` を起動すると、自動的にハンドシェイクが行われ通信が開始されます。
+```cpp
+#define USE_WIFI
+#define WIFI_SSID       "your_ssid"      // ← WiFiのSSID
+#define WIFI_PASSWORD   "your_password"  // ← WiFiのパスワード
+#define WIFI_TCP_PORT   (8080)           // ← TCPポート番号 (通常は変更不要)
+```
 
-3. `/cmd_vel` トピックに速度指令を送ると、ロボットが動作します。
+IPアドレスを固定する場合は、`WIFI_STATIC_IP` のコメントも外して各アドレスを設定します。
 
-> [!TIP]
-> 通信が正常に確立されない場合は、USB ケーブルを抜き差しして再接続してください。
+```cpp
+#define WIFI_STATIC_IP
+#define WIFI_IP         IPAddress(192, 168, 0, 101)
+#define WIFI_GATEWAY    IPAddress(192, 168, 0,   1)
+#define WIFI_SUBNET     IPAddress(255, 255, 255,  0)
+```
 
-## WiFi モード
+スケッチを書き込むと、Pico 2 WH は設定した SSID の WiFi ルータに接続します。
 
-1. Pico 2 WH が WiFi ネットワークに接続されたあと、`socat` で仮想シリアルポートを作成します。Pico の IP アドレスと設定したポート番号を指定してください。
-
-   ```bash
-   sudo socat pty,link=/dev/ttyPICO,rawer TCP:<Pico_IP>:<WIFI_TCP_PORT>
-   ```
-
-   例:
-
-   ```bash
-   sudo socat pty,link=/dev/ttyPICO,rawer TCP:192.168.1.100:8080
-   ```
-
-2. 別ターミナルで ROS 2パッケージ `cugo_v4.5_ros2_control` を起動する際、シリアルポートとして `/dev/ttyPICO` を指定します。
-
-3. `/cmd_vel` トピックに速度指令を送ると、ロボットが動作します。
+| 接続先 | 接続方法 |
+|--------|----------|
+| PC（ROS 2） ↔ WiFi ルータ | 有線 LAN またはWiFi |
+| Pico 2 WH ↔ WiFi ルータ | WiFi（スケッチで設定した SSID に接続） |
 
 > [!NOTE]
-> Pico の IP アドレスは、ルータの管理画面またはシリアルモニタで確認できます。
->
-> socat を終了すると通信が切断されます。再接続するには socat を再起動してください。
+> Pico の IP アドレスは、ルータの管理画面で確認できます。`WIFI_DEBUG_SERIAL` を有効にすると USB シリアルモニタにも表示されます。
+
+ROS PC 側の設定（socat の起動など）は [cugo_v4.5_ros2_control](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control) を参照してください。
 
 
 # Architecture
@@ -128,10 +117,11 @@ cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ `cugo_v4.5_ros2_contro
 ┌────────────────────────────────────────────────────────────┐
 │                        PC (ROS 2)                          │
 │              cugo_v4.5_ros2_control ノード                  │
-└─────────────────────────┬──────────────────────────────────┘
-                          │ USB CDC (PacketSerial / COBS)
-                          │ 115200 bps
-┌─────────────────────────▼──────────────────────────────────┐
+└──────────────┬──────────────────────────┬──────────────────┘
+               │ USB-Serial モード          │ WiFi モード
+               │ USB CDC / PacketSerial     │ WiFi TCP / socat / PacketSerial
+               │ 115200 bps                 │
+┌──────────────▼──────────────────────────▼──────────────────┐
 │           Raspberry Pi Pico 2 WH (インターフェースモジュール)  │
 │            cugo_v4.5_ros2_motorcontroller                  │
 └─────────────────────────┬──────────────────────────────────┘
@@ -142,62 +132,20 @@ cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ `cugo_v4.5_ros2_contro
 └────────────────────────────────────────────────────────────┘
 ```
 
-**通信ポート**
-
-| ポート | 用途 | 相手 |
-|--------|------|------|
-| Serial (USB CDC) | ROS 2コントローラノードとの通信 | PC |
-| Serial1 (UART0) | CRST01A 車両コントローラとの通信 | CRST01A |
-
 **主要ファイル**
 
 | ファイル | 役割 |
 |---------|------|
-| `cugo_v4.5_ros2_motorcontroller.ino` | メインループ・フェイルセーフ・CRST01A状態監視 |
-| `RosComm.h / .cpp` | ROSとのパケット解析・送信モジュール |
-| `Crst01a.h / .cpp` | CRST01A通信ラッパー |
+| `config.h` | **ユーザー設定ファイル** — 通信モード・WiFi 設定（編集するのはこのファイルのみ） |
+| `Transport.h / .cpp` | トランスポート抽象化 — USB-Serial / WiFi の切り替えを隠蔽 |
+| `cugo_v4.5_ros2_motorcontroller.ino` | メインループ・フェイルセーフ・CRST01A 状態監視 |
+| `RosComm.h / .cpp` | ROSとのパケット解析・送信 |
+| `Crst01a.h / .cpp` | CRST01A 通信ラッパー |
 
 
 # Protocol
 
-**プロダクトID**: `10000`（プロトコル識別子: `1`）
-
-ロボット-ROS通信仕様 プロトコル識別子1 に準拠します。
-
-**パケット構成**
-
-```
-[ヘッダ 8byte] + [ボディ 64byte] = 合計 72byte
-```
-
-ヘッダフォーマット:
-
-| オフセット | サイズ | 内容 |
-|-----------|--------|------|
-| 0 | 2 byte | プロダクトID (uint16_t) |
-| 2 | 2 byte | ロボットID (uint16_t) |
-| 4 | 2 byte | 電文長 (uint16_t) |
-| 6 | 2 byte | チェックサム (uint16_t, IPチェックサム, ボディのみ対象) |
-
-受信ボディフォーマット:
-
-| オフセット | サイズ | 内容 |
-|-----------|--------|------|
-| 0 | 2 byte | 目標X方向速度 (int16_t, 値×0.001 m/s) |
-| 2 | 2 byte | 目標Y方向速度 (int16_t, 値×0.001 m/s) |
-| 4 | 2 byte | 目標旋回速度 (int16_t, 値×0.001 rad/s) |
-| 60 | 2 byte | プロダクトID (uint16_t, ヘッダと同値) |
-| 62 | 2 byte | ロボットID (uint16_t, ヘッダと同値) |
-
-送信ボディフォーマット:
-
-| オフセット | サイズ | 内容 |
-|-----------|--------|------|
-| 0 | 2 byte | 現在X方向速度 (int16_t, 値×0.001 m/s) |
-| 2 | 2 byte | 現在Y方向速度 (int16_t, 値×0.001 m/s) |
-| 4 | 2 byte | 現在旋回速度 (int16_t, 値×0.001 rad/s) |
-| 60 | 2 byte | プロダクトID (uint16_t) |
-| 62 | 2 byte | ロボットID (uint16_t) |
+パケット構成・データフォーマットの詳細は [cugo_v4.5_ros2_control](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control) を参照してください。
 
 **ハンドシェイク**
 
