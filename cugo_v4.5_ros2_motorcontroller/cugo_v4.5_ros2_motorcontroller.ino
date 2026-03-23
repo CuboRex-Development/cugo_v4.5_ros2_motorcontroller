@@ -9,8 +9,10 @@
 // 対象ボード: Raspberry Pi Pico 2WH
 //
 // 通信ポート:
-//   Serial  (USB CDC) : ROSコントローラノードとの通信 (PacketSerial使用)
-//   Serial1 (UART0)   : CRST01A車両コントローラとの通信 (crst01a_arduino_lib使用)
+//   USB-Serial モード: Serial (USB CDC)  — ROSコントローラノードとの通信
+//   WiFi モード:       WiFi (TCP)        — ROSコントローラノードとの通信
+//   (config.h の USE_WIFI で切り替え)
+//   Serial1 (UART0): CRST01A車両コントローラとの通信 (crst01a_arduino_lib使用)
 //
 // 使用ライブラリ:
 //   PacketSerial        : COBSエンコード/デコード
@@ -18,33 +20,8 @@
 //
 // プロトコル: ロボット-ROS通信仕様 プロトコル識別子1 (プロダクトID 10000)
 
-// ----------------------------------------------------------------------------
-// トランスポート設定
-// WiFiを使用する場合は以下の行のコメントを外してください。デフォルトはSerialです。
-// ----------------------------------------------------------------------------
-// #define USE_WIFI
-
-#ifdef USE_WIFI
-#define WIFI_SSID       "your_ssid"
-#define WIFI_PASSWORD   "your_password"
-#define WIFI_TCP_PORT   (8080)
-
-// 接続状況と自身のIPをUSBシリアルに出力する場合は以下の行のコメントを外してください
-// #define WIFI_DEBUG_SERIAL
-
-// 静的IPを使用する場合は以下の行のコメントを外してください
-// #define WIFI_STATIC_IP
-// #ifdef WIFI_STATIC_IP
-#define WIFI_IP         IPAddress(192, 168,  0, 101)
-#define WIFI_GATEWAY    IPAddress(192, 168,  0,   1)
-#define WIFI_SUBNET     IPAddress(255, 255, 255,  0)
-#endif
-#endif
-
-#include <PacketSerial.h>
-#ifdef USE_WIFI
-#include <WiFi.h>
-#endif
+#include "config.h"
+#include "Transport.h"
 #include "Crst01a.h"
 #include "RosComm.h"
 
@@ -76,11 +53,11 @@
 void CheckFailsafe(void);
 void MonitorCrstStatus(void);
 void OnSerialPacketReceived(const uint8_t *buffer, size_t size);
+void onNewWifiClient(void);
 
 // ----------------------------------------------------------------------------
 // 定周期ジョブ
 // ----------------------------------------------------------------------------
-
 
 void Job10ms(void) {
 	// 予約
@@ -96,17 +73,10 @@ void Job1000ms(void) {
 }
 
 // ----------------------------------------------------------------------------
-// フェイルセーフ
-// 5回連続 (100ms × 5 = 0.5秒) ROSからの通信が来なかった場合に停止する
+// グローバル変数
 // ----------------------------------------------------------------------------
-#define FAILSAFE_COUNT_MAX  (5)
 
-PacketSerial packetSerial;
-
-#ifdef USE_WIFI
-WiFiServer wifiServer(WIFI_TCP_PORT);
-WiFiClient wifiClient;
-#endif
+Transport transport;
 
 // タイムスタンプ (オーバーフローしても符号なし演算で正常に動作する)
 unsigned long long currentTime = 0;
@@ -114,7 +84,7 @@ unsigned long long prevTime10ms = 0;
 unsigned long long prevTime100ms = 0;
 unsigned long long prevTime1000ms = 0;
 
-// 通信失敗カウンタ
+// 通信失敗カウンタ (フェイルセーフ用)
 int comFailCount = 0;
 
 // フェイルセーフ状態フラグ (通信断によるフェイルセーフ発動中)
@@ -135,9 +105,10 @@ bool IsCrstErrorActive(uint8_t ctrlErr, uint8_t drvErr) {
 
 // ----------------------------------------------------------------------------
 // フェイルセーフ
+// 5回連続 (100ms × 5 = 0.5秒) ROSからの通信が来なかった場合に停止する
 // ----------------------------------------------------------------------------
+#define FAILSAFE_COUNT_MAX  (5)
 
-// 100msごとに呼び出し、通信断を検知したらロボットを停止する
 void CheckFailsafe(void) {
 	comFailCount++;
 	if (comFailCount > FAILSAFE_COUNT_MAX) {
@@ -204,7 +175,7 @@ void OnSerialPacketReceived(const uint8_t *buffer, size_t size) {
 		handshakeDoneF = true;
 		crst01a.SetMoveSpeed(0, 0, 0);
 		crst01a.SetControlMode(CRST_CMD_MODE);  // ハンドシェイク後に1度だけCMDモードへ移行
-		RosCommSendResponse(&packetSerial, 0, 0, 0, true);
+		RosCommSendResponse(&transport.serial(), 0, 0, 0, true);
 		return;
 	}
 
@@ -231,7 +202,17 @@ void OnSerialPacketReceived(const uint8_t *buffer, size_t size) {
 		curX = curY = curYaw = 0;
 	}
 
-	RosCommSendResponse(&packetSerial, curX, curY, curYaw, false);
+	RosCommSendResponse(&transport.serial(), curX, curY, curYaw, false);
+}
+
+// ----------------------------------------------------------------------------
+// WiFi 新規クライアント接続時コールバック
+// Transport::update() から呼び出される (Serial モードでは呼び出されない)
+// ----------------------------------------------------------------------------
+void onNewWifiClient(void) {
+	handshakeDoneF  = false;
+	failsafeActiveF = false;
+	comFailCount    = 0;
 }
 
 // ----------------------------------------------------------------------------
@@ -248,42 +229,8 @@ void setup() {
 	// 走行状態 (0x81) の定期受信を有効化 (50Hz)
 	crst01a.SetCycleReq(CRST_FUNC_READ_RUN_STATUS);
 
-#ifdef USE_WIFI
-	// WiFi接続
-#ifdef WIFI_DEBUG_SERIAL
-	Serial.begin(115200);
-	Serial.print("Connecting to WiFi");
-#endif
-#ifdef WIFI_STATIC_IP
-	WiFi.config(WIFI_IP, WIFI_GATEWAY, WIFI_SUBNET);
-#endif
-	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-	while (WiFi.status() != WL_CONNECTED) {
-#ifdef WIFI_DEBUG_SERIAL
-		Serial.print(".");
-#endif
-		delay(100);
-	}
-#ifdef WIFI_DEBUG_SERIAL
-	Serial.println();
-	Serial.print("Connected. IP: ");
-	Serial.println(WiFi.localIP());
-#endif
-	// TCPサーバ起動 (クライアントとのストリーム接続はループ内で行う)
-	wifiServer.begin();
-	packetSerial.setPacketHandler(&OnSerialPacketReceived);
-#else
-	// PacketSerial初期化 (COBSエンコード/デコード、USB CDC Serial使用)
-	packetSerial.begin(115200);
-	packetSerial.setStream(&Serial);
-	packetSerial.setPacketHandler(&OnSerialPacketReceived);
-
-	// 起動直後のシリアルバッファをクリア
-	delay(100);
-	while (Serial.available() > 0) {
-		Serial.read();
-	}
-#endif
+	// トランスポート初期化 (config.h の USE_WIFI に応じて Serial または WiFi を使用)
+	transport.begin(&OnSerialPacketReceived);
 }
 
 // ----------------------------------------------------------------------------
@@ -307,33 +254,6 @@ void loop() {
 		prevTime1000ms = currentTime;
 	}
 
-#ifdef USE_WIFI
-	// WiFiクライアント管理 (接続・再接続処理)
-	if (!wifiClient.connected()) {
-		WiFiClient newClient = wifiServer.accept();
-		if (newClient) {
-			wifiClient = newClient;
-			packetSerial.setStream(&wifiClient);
-			// 新規クライアント接続: ハンドシェイク状態をリセット
-			handshakeDoneF = false;
-			failsafeActiveF = false;
-			comFailCount = 0;
-		}
-	}
-	// PacketSerial受信処理 (クライアント接続中のみ)
-	if (wifiClient.connected()) {
-		packetSerial.update();
-		if (packetSerial.overflow()) {
-			// 現状は無視 (必要に応じてエラー通知等を追加)
-		}
-	}
-#else
-	// PacketSerial受信処理 (受信完了でOnSerialPacketReceivedを呼び出す)
-	packetSerial.update();
-
-	// バッファオーバーフロー検知 (必要に応じて対処)
-	if (packetSerial.overflow()) {
-		// 現状は無視 (必要に応じてエラー通知等を追加)
-	}
-#endif
+	// トランスポート受信処理 (WiFiモードはクライアント管理も含む)
+	transport.update(&onNewWifiClient);
 }
