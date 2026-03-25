@@ -10,8 +10,31 @@
 #ifdef USE_WIFI
 
 void Transport::_initWifi() {
-#ifdef WIFI_DEBUG_SERIAL
+#ifdef WIFI_AP_MODE
+    // ----------------------------------------------------------
+    // APモード: Pico 2WH 自身がアクセスポイントとして起動する
+    // ----------------------------------------------------------
+#ifdef DEBUG_SERIAL
     Serial.begin(115200);
+    delay(1000);
+    Serial.println("Mode: WiFi APモード");
+#endif
+
+    WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASSWORD);
+
+#ifdef DEBUG_SERIAL
+    Serial.print("AP started. IP: ");
+    Serial.println(WiFi.localIP());
+#endif
+
+#else
+    // ----------------------------------------------------------
+    // Stationモード: 既存の WiFi ルータに接続する
+    // ----------------------------------------------------------
+#ifdef DEBUG_SERIAL
+    Serial.begin(115200);
+    delay(1000);
+    Serial.println("Mode: WiFi Stationモード");
     Serial.print("Connecting to WiFi");
 #endif
 
@@ -21,17 +44,19 @@ void Transport::_initWifi() {
 
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {
-#ifdef WIFI_DEBUG_SERIAL
+#ifdef DEBUG_SERIAL
         Serial.print(".");
 #endif
         delay(100);
     }
 
-#ifdef WIFI_DEBUG_SERIAL
+#ifdef DEBUG_SERIAL
     Serial.println();
     Serial.print("Connected. IP: ");
     Serial.println(WiFi.localIP());
 #endif
+
+#endif // WIFI_AP_MODE
 }
 
 void Transport::begin(PacketHandlerFn handler) {
