@@ -46,6 +46,11 @@
 // #define DEBUG_WIFI_RX_LOG       // COBSデコード後の受信データをUSBシリアルに出力
 // #define DEBUG_WIFI_TX_RAW_LOG   // COBSエンコード後の送信データをUSBシリアルに出力
 // #define DEBUG_WIFI_RX_RAW_LOG   // COBSデコード前の受信データをUSBシリアルに出力
+// #define DEBUG_SERIAL_STATS      // 1秒ごとにループ統計をUSBシリアルに出力
+//                                 //   loops/s   : ループ実行回数 (低い = ループが詰まっている)
+//                                 //   maxLoop   : ループ1回の最大所要時間 [µs]
+//                                 //   maxUpdate : transport.update() の最大所要時間 [µs] (WiFi TCP受信処理)
+//                                 //   maxDelay1 : delay(1) の実際の最大所要時間 [µs] (CYW43スタック処理)
 
 // ------------------------------------------------------------
 // WiFi Stationモード設定 (USE_WIFI 定義かつ WIFI_AP_MODE 未定義時のみ有効)
@@ -64,6 +69,11 @@
 // #define DEBUG_WIFI_RX_LOG       // COBSデコード後の受信データをUSBシリアルに出力
 // #define DEBUG_WIFI_TX_RAW_LOG   // COBSエンコード後の送信データをUSBシリアルに出力
 // #define DEBUG_WIFI_RX_RAW_LOG   // COBSデコード前の受信データをUSBシリアルに出力
+// #define DEBUG_SERIAL_STATS      // 1秒ごとにループ統計をUSBシリアルに出力
+//                                 //   loops/s   : ループ実行回数 (低い = ループが詰まっている)
+//                                 //   maxLoop   : ループ1回の最大所要時間 [µs]
+//                                 //   maxUpdate : transport.update() の最大所要時間 [µs] (WiFi TCP受信処理)
+//                                 //   maxDelay1 : delay(1) の実際の最大所要時間 [µs] (CYW43スタック処理)
 
 // 静的IPを使用する場合はコメントを外して各アドレスを設定してください
 // #define WIFI_STATIC_IP

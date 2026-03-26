@@ -12,7 +12,7 @@
 void Transport::_initWifi() {
     // USBシリアル出力が必要なフラグがいずれか有効なら Serial を起動する
 #if defined(INFO_SERIAL) || defined(DEBUG_WIFI_TX_LOG) || defined(DEBUG_WIFI_RX_LOG) || \
-    defined(DEBUG_WIFI_TX_RAW_LOG) || defined(DEBUG_WIFI_RX_RAW_LOG)
+    defined(DEBUG_WIFI_TX_RAW_LOG) || defined(DEBUG_WIFI_RX_RAW_LOG) || defined(DEBUG_SERIAL_STATS)
     Serial.begin(115200);
     delay(1000);
 #endif

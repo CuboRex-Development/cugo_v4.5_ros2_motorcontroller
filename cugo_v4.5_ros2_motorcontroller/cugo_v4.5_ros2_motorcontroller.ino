@@ -54,6 +54,9 @@ void CheckFailsafe(void);
 void MonitorCrstStatus(void);
 void OnSerialPacketReceived(const uint8_t *buffer, size_t size);
 void onNewWifiClient(void);
+#ifdef DEBUG_SERIAL_STATS
+void PrintSerialStats(void);
+#endif
 
 // ----------------------------------------------------------------------------
 // 定周期ジョブ
@@ -69,7 +72,9 @@ void Job100ms(void) {
 }
 
 void Job1000ms(void) {
-	// 予約
+#ifdef DEBUG_SERIAL_STATS
+	PrintSerialStats();
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -86,6 +91,14 @@ unsigned long long prevTime1000ms = 0;
 
 // 通信失敗カウンタ (フェイルセーフ用)
 int comFailCount = 0;
+
+// ループ統計 (DEBUG_SERIAL_STATS 有効時のみ使用)
+#ifdef DEBUG_SERIAL_STATS
+uint32_t statsLoopCount   = 0;  // 1秒間のループ実行回数
+uint32_t statsLoopMaxUs   = 0;  // ループ1回の最大所要時間 [µs]
+uint32_t statsUpdateMaxUs = 0;  // transport.update() の最大所要時間 [µs]
+uint32_t statsDelayMaxUs  = 0;  // delay(1) の実際の最大所要時間 [µs]
+#endif
 
 // フェイルセーフ状態フラグ (通信断によるフェイルセーフ発動中)
 bool failsafeActiveF = false;
@@ -206,6 +219,22 @@ void OnSerialPacketReceived(const uint8_t *buffer, size_t size) {
 }
 
 // ----------------------------------------------------------------------------
+// シリアル統計出力 (DEBUG_SERIAL_STATS 有効時のみ使用)
+// ----------------------------------------------------------------------------
+#ifdef DEBUG_SERIAL_STATS
+void PrintSerialStats(void) {
+	Serial.print("[STATS] loops/s=");  Serial.print(statsLoopCount);
+	Serial.print("  maxLoop=");        Serial.print(statsLoopMaxUs);   Serial.print("us");
+	Serial.print("  maxUpdate=");      Serial.print(statsUpdateMaxUs); Serial.print("us");
+	Serial.print("  maxDelay1=");      Serial.print(statsDelayMaxUs);  Serial.println("us");
+	statsLoopCount   = 0;
+	statsLoopMaxUs   = 0;
+	statsUpdateMaxUs = 0;
+	statsDelayMaxUs  = 0;
+}
+#endif
+
+// ----------------------------------------------------------------------------
 // WiFi 新規クライアント接続時コールバック
 // Transport::update() から呼び出される (Serial モードでは呼び出されない)
 // ----------------------------------------------------------------------------
@@ -237,6 +266,10 @@ void setup() {
 // メインループ
 // ----------------------------------------------------------------------------
 void loop() {
+#ifdef DEBUG_SERIAL_STATS
+	uint32_t _loopStart = micros();
+#endif
+
 	currentTime = micros();
 
 	if (currentTime - prevTime10ms > 10000) {
@@ -255,11 +288,35 @@ void loop() {
 	}
 
 	// トランスポート受信処理 (WiFiモードはクライアント管理も含む)
+#ifdef DEBUG_SERIAL_STATS
+	{
+		uint32_t _t = micros();
+		transport.update(&onNewWifiClient);
+		uint32_t _d = micros() - _t;
+		if (_d > statsUpdateMaxUs) statsUpdateMaxUs = _d;
+	}
+#else
 	transport.update(&onNewWifiClient);
+#endif
 
 #ifdef USE_WIFI
 	// WiFiスタック (CYW43) にバックグラウンド処理の時間を渡す
 	// delay() 内部で yield() -> cyw43_arch_poll() が呼ばれ、ICMP/ARP等が処理される
+#ifdef DEBUG_SERIAL_STATS
+	{
+		uint32_t _t = micros();
+		delay(1);
+		uint32_t _d = micros() - _t;
+		if (_d > statsDelayMaxUs) statsDelayMaxUs = _d;
+	}
+#else
 	delay(1);
+#endif
+#endif
+
+#ifdef DEBUG_SERIAL_STATS
+	statsLoopCount++;
+	uint32_t _loopDur = micros() - _loopStart;
+	if (_loopDur > statsLoopMaxUs) statsLoopMaxUs = _loopDur;
 #endif
 }
