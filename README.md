@@ -171,12 +171,36 @@ WiFi モードでは `config.h` に以下のデバッグフラグを用意して
 | フラグ                  | 出力内容                                           |
 | ----------------------- | -------------------------------------------------- |
 | `INFO_SERIAL`           | 起動時のモード名・IP アドレス（デフォルト有効）    |
+| `DEBUG_SERIAL_STATS`    | 1秒ごとのループ統計（後述）                        |
 | `DEBUG_WIFI_TX_LOG`     | COBSエンコード前の送信データ（生パケット）         |
 | `DEBUG_WIFI_RX_LOG`     | COBSデコード後の受信データ（生パケット）           |
 | `DEBUG_WIFI_TX_RAW_LOG` | COBSエンコード後の送信データ（ワイヤ上のバイト列） |
 | `DEBUG_WIFI_RX_RAW_LOG` | COBSデコード前の受信データ（ワイヤ上のバイト列）   |
 
-`INFO_SERIAL` が無効でも、`DEBUG_WIFI_*` フラグのいずれかを有効にすれば USB シリアルが自動的に起動します。
+`INFO_SERIAL` が無効でも、`DEBUG_SERIAL_STATS` または `DEBUG_WIFI_*` フラグのいずれかを有効にすれば USB シリアルが自動的に起動します。
+
+### DEBUG_SERIAL_STATS の出力形式
+
+1秒ごとに以下の形式でループ統計を出力します。
+
+```text
+[STATS] loops/s=1000  maxLoop=2500us  maxUpdate=1500us  maxDelay1=1500us
+```
+
+| フィールド | 内容 |
+| --- | --- |
+| `loops/s` | 1秒間のループ実行回数。CPU飽和やブロッキングの有無を示す |
+| `maxLoop` | 1ループあたりの最大所要時間 [µs]。この値が大きいほど特定のループで処理が詰まっている |
+| `maxUpdate` | `transport.update()` の最大所要時間 [µs]。WiFi TCP受信処理（PacketSerial読み出し）の負荷 |
+| `maxDelay1` | `delay(1)` の実際の最大所要時間 [µs]。CYW43 WiFiスタックのバックグラウンド処理コスト |
+
+各値は1秒ごとにリセットされるウィンドウ内の最大値です。
+
+### DEBUG_SERIAL_STATS の 読み方
+
+- `maxUpdate` が大きい → WiFi TCP受信処理が重い（パケット受信時のみ増加する）
+- `maxDelay1` が大きい → CYW43スタックがARP/TCPの管理処理を実施している
+- `loops/s` が極端に低い → ループ全体がブロッキングされている
 
 > [!WARNING]
 > `DEBUG_WIFI_*` フラグは USB-Serial モード（`USE_WIFI` 未定義時）では使用できません。USB-Serial モードでは Serial ポートを ROS との通信に使用するため、ログ出力と競合します。
