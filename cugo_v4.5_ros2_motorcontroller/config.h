@@ -39,7 +39,13 @@
 #define WIFI_AP_CHANNEL     (1)         // アクセスポイントのチャンネル (1, 6, 11 を推奨)
 
 // 起動時に通信モードとIPアドレスをUSBシリアルに出力します (無効にする場合はコメントアウト)
-#define DEBUG_SERIAL
+#define INFO_SERIAL
+
+// --- デバッグログ (開発者向け、通常はコメントアウト) ---
+// #define DEBUG_WIFI_TX_LOG       // COBSエンコード前の送信データをUSBシリアルに出力
+// #define DEBUG_WIFI_RX_LOG       // COBSデコード後の受信データをUSBシリアルに出力
+// #define DEBUG_WIFI_TX_RAW_LOG   // COBSエンコード後の送信データをUSBシリアルに出力
+// #define DEBUG_WIFI_RX_RAW_LOG   // COBSデコード前の受信データをUSBシリアルに出力
 
 // ------------------------------------------------------------
 // WiFi Stationモード設定 (USE_WIFI 定義かつ WIFI_AP_MODE 未定義時のみ有効)
@@ -51,7 +57,13 @@
 #define WIFI_TCP_PORT       (8080)          // TCPポート番号
 
 // 起動時に通信モードとIPアドレスをUSBシリアルに出力します (無効にする場合はコメントアウト)
-#define DEBUG_SERIAL
+#define INFO_SERIAL
+
+// --- デバッグログ (開発者向け、通常はコメントアウト) ---
+// #define DEBUG_WIFI_TX_LOG       // COBSエンコード前の送信データをUSBシリアルに出力
+// #define DEBUG_WIFI_RX_LOG       // COBSデコード後の受信データをUSBシリアルに出力
+// #define DEBUG_WIFI_TX_RAW_LOG   // COBSエンコード後の送信データをUSBシリアルに出力
+// #define DEBUG_WIFI_RX_RAW_LOG   // COBSデコード前の受信データをUSBシリアルに出力
 
 // 静的IPを使用する場合はコメントを外して各アドレスを設定してください
 // #define WIFI_STATIC_IP

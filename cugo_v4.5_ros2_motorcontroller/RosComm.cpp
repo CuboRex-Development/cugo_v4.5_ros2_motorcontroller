@@ -1,5 +1,6 @@
 // ROS通信モジュール 実装
 #include "RosComm.h"
+#include "config.h"
 
 
 // ----------------------------------------------------------------------------
@@ -81,6 +82,16 @@ static uint16_t CalcChecksum(const uint8_t *data, size_t size) {
 // 受信パケット解析・検証
 // ----------------------------------------------------------------------------
 bool RosCommParsePacket(const uint8_t *buffer, size_t size, RosCommRecvData *outData, bool handshakeDone) {
+#ifdef DEBUG_WIFI_RX_LOG
+	Serial.print("[WiFi RX] ");
+	for (size_t i = 0; i < size; i++) {
+		if (buffer[i] < 0x10) Serial.print('0');
+		Serial.print(buffer[i], HEX);
+		Serial.print(' ');
+	}
+	Serial.println();
+#endif
+
 	if (size < (size_t)(SERIAL_HEADER_SIZE + SERIAL_BIN_BUFF_SIZE)) {
 		return false;
 	}
@@ -161,6 +172,16 @@ void RosCommSendResponse(PacketSerial *ps, int16_t curX, int16_t curY, int16_t c
 	uint8_t sendPacket[SERIAL_HEADER_SIZE + SERIAL_BIN_BUFF_SIZE];
 	memcpy(sendPacket, sendHeader, SERIAL_HEADER_SIZE);
 	memcpy(sendPacket + SERIAL_HEADER_SIZE, sendBody, SERIAL_BIN_BUFF_SIZE);
+
+#ifdef DEBUG_WIFI_TX_LOG
+	Serial.print("[WiFi TX] ");
+	for (size_t i = 0; i < sendLen; i++) {
+		if (sendPacket[i] < 0x10) Serial.print('0');
+		Serial.print(sendPacket[i], HEX);
+		Serial.print(' ');
+	}
+	Serial.println();
+#endif
 
 	ps->send(sendPacket, sendLen);
 }

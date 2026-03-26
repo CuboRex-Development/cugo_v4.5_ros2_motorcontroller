@@ -10,30 +10,33 @@
 #ifdef USE_WIFI
 
 void Transport::_initWifi() {
+    // USBシリアル出力が必要なフラグがいずれか有効なら Serial を起動する
+#if defined(INFO_SERIAL) || defined(DEBUG_WIFI_TX_LOG) || defined(DEBUG_WIFI_RX_LOG) || \
+    defined(DEBUG_WIFI_TX_RAW_LOG) || defined(DEBUG_WIFI_RX_RAW_LOG)
+    Serial.begin(115200);
+    delay(1000);
+#endif
+
 #ifdef WIFI_AP_MODE
     // ----------------------------------------------------------
     // APモード: Pico 2WH 自身がアクセスポイントとして起動する
     // ----------------------------------------------------------
-#ifdef DEBUG_SERIAL
-    Serial.begin(115200);
-    delay(1000);
+#ifdef INFO_SERIAL
     Serial.println("Mode: WiFi APモード");
 #endif
 
     WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASSWORD, WIFI_AP_CHANNEL);
 
-#ifdef DEBUG_SERIAL
+#ifdef INFO_SERIAL
     Serial.print("AP started. IP: ");
-    Serial.println(WiFi.localIP());
+    Serial.println(WiFi.softAPIP());
 #endif
 
 #else
     // ----------------------------------------------------------
     // Stationモード: 既存の WiFi ルータに接続する
     // ----------------------------------------------------------
-#ifdef DEBUG_SERIAL
-    Serial.begin(115200);
-    delay(1000);
+#ifdef INFO_SERIAL
     Serial.println("Mode: WiFi Stationモード");
     Serial.print("Connecting to WiFi");
 #endif
@@ -44,13 +47,13 @@ void Transport::_initWifi() {
 
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {
-#ifdef DEBUG_SERIAL
+#ifdef INFO_SERIAL
         Serial.print(".");
 #endif
         delay(100);
     }
 
-#ifdef DEBUG_SERIAL
+#ifdef INFO_SERIAL
     Serial.println();
     Serial.print("Connected. IP: ");
     Serial.println(WiFi.localIP());
@@ -73,7 +76,8 @@ void Transport::update(void (*onNewClient)()) {
         WiFiClient newClient = _server.accept();
         if (newClient) {
             _client = newClient;
-            _packetSerial.setStream(&_client);
+            _debugStream.setInner(&_client);
+            _packetSerial.setStream(&_debugStream);
             if (onNewClient != nullptr) {
                 onNewClient();
             }
