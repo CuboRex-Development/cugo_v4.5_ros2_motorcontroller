@@ -105,9 +105,15 @@ Raspberry Pi Pico 2 WH 自身をアクセスポイントとして動作させま
 #define WIFI_AP_SSID        "CuGo_AP"    // ← アクセスポイントのSSID
 #define WIFI_AP_PASSWORD    "cugo1234"   // ← アクセスポイントのパスワード
 #define WIFI_TCP_PORT       (8080)       // ← TCPポート番号 (通常は変更不要)
+#define WIFI_AP_CHANNEL     (1)          // ← チャンネル番号 (1 / 6 / 11 を推奨)
 ```
 
 スケッチを書き込むと、Raspberry Pi Pico 2 WH がアクセスポイントとして起動します。ROS PC をそのアクセスポイントに接続し、Pico の IP アドレス（デフォルト: `192.168.42.1`）を ROS 側の接続先として指定してください。
+
+> [!TIP]
+> 周辺の WiFi 機器との電波干渉により通信が不安定になる場合は、`WIFI_AP_CHANNEL` を変更してください。
+
+<!-- -->
 
 > [!NOTE]
 > `DEBUG_SERIAL` はデフォルトで有効です。起動時に USB シリアルモニタへモード名と IP アドレスが表示されます。不要な場合は `config.h` の `DEBUG_SERIAL` 行をコメントアウトしてください。

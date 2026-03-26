@@ -256,4 +256,10 @@ void loop() {
 
 	// トランスポート受信処理 (WiFiモードはクライアント管理も含む)
 	transport.update(&onNewWifiClient);
+
+#ifdef USE_WIFI
+	// WiFiスタック (CYW43) にバックグラウンド処理の時間を渡す
+	// delay() 内部で yield() -> cyw43_arch_poll() が呼ばれ、ICMP/ARP等が処理される
+	delay(1);
+#endif
 }

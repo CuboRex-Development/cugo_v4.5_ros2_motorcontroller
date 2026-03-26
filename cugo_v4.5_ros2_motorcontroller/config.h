@@ -36,6 +36,7 @@
 #define WIFI_AP_SSID        "CuGo_AP"   // アクセスポイントの SSID
 #define WIFI_AP_PASSWORD    "cugo1234"  // アクセスポイントのパスワード
 #define WIFI_TCP_PORT       (8080)      // TCPポート番号
+#define WIFI_AP_CHANNEL     (1)         // アクセスポイントのチャンネル (1, 6, 11 を推奨)
 
 // 起動時に通信モードとIPアドレスをUSBシリアルに出力します (無効にする場合はコメントアウト)
 #define DEBUG_SERIAL
