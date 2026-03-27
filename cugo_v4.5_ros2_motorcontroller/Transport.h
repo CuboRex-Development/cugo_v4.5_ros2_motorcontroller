@@ -142,6 +142,102 @@ private:
 };
 #endif // USE_WIFI
 
+#ifdef USE_BOX_CN
+// UART1 (Serial2) の生バイトをUSBシリアルにログ出力するデバッグ用ストリームラッパー。
+// DEBUG_BOX_CN_TX_RAW_LOG / DEBUG_BOX_CN_RX_RAW_LOG が有効な場合のみパケットバッファを使用します。
+// COBS パケット終端の 0x00 を区切りとして1パケット分をまとめて出力します。
+class DebugStreamSerial : public Stream {
+public:
+    // ラップ対象ストリームを設定します。
+    void setInner(HardwareSerial* s) {
+        _inner = s;
+#ifdef DEBUG_BOX_CN_RX_RAW_LOG
+        _rxLen = 0;
+#endif
+#ifdef DEBUG_BOX_CN_TX_RAW_LOG
+        _txLen = 0;
+#endif
+    }
+
+    int  available() override { return _inner ? _inner->available() : 0; }
+    int  peek()      override { return _inner ? _inner->peek()      : -1; }
+    void flush()     override { if (_inner) _inner->flush(); }
+
+    int read() override {
+        if (!_inner) return -1;
+        int b = _inner->read();
+        if (b < 0) return b;
+#ifdef DEBUG_BOX_CN_RX_RAW_LOG
+        if (b == 0x00) {
+            Serial.print("[BOX_CN RX RAW] ");
+            for (size_t i = 0; i < _rxLen; i++) {
+                if (_rxBuf[i] < 0x10) Serial.print('0');
+                Serial.print(_rxBuf[i], HEX);
+                Serial.print(' ');
+            }
+            Serial.println();
+            _rxLen = 0;
+        } else if (_rxLen < kLogBufSize) {
+            _rxBuf[_rxLen++] = (uint8_t)b;
+        }
+#endif
+        return b;
+    }
+
+    size_t write(uint8_t b) override {
+#ifdef DEBUG_BOX_CN_TX_RAW_LOG
+        if (b == 0x00) {
+            Serial.print("[BOX_CN TX RAW] ");
+            for (size_t i = 0; i < _txLen; i++) {
+                if (_txBuf[i] < 0x10) Serial.print('0');
+                Serial.print(_txBuf[i], HEX);
+                Serial.print(' ');
+            }
+            Serial.println();
+            _txLen = 0;
+        } else if (_txLen < kLogBufSize) {
+            _txBuf[_txLen++] = b;
+        }
+#endif
+        return _inner ? _inner->write(b) : 1;
+    }
+
+    size_t write(const uint8_t* buf, size_t size) override {
+#ifdef DEBUG_BOX_CN_TX_RAW_LOG
+        for (size_t i = 0; i < size; i++) {
+            if (buf[i] == 0x00) {
+                Serial.print("[BOX_CN TX RAW] ");
+                for (size_t j = 0; j < _txLen; j++) {
+                    if (_txBuf[j] < 0x10) Serial.print('0');
+                    Serial.print(_txBuf[j], HEX);
+                    Serial.print(' ');
+                }
+                Serial.println();
+                _txLen = 0;
+            } else if (_txLen < kLogBufSize) {
+                _txBuf[_txLen++] = buf[i];
+            }
+        }
+#endif
+        return _inner ? _inner->write(buf, size) : size;
+    }
+
+private:
+    HardwareSerial* _inner = nullptr;
+
+    // RAWログ用バッファ: COBS パケット終端 (0x00) までのバイト列を蓄積してまとめて出力する
+    static const size_t kLogBufSize = 128;  // 1パケット最大長 (74バイト + マージン)
+#ifdef DEBUG_BOX_CN_RX_RAW_LOG
+    uint8_t _rxBuf[kLogBufSize];
+    size_t  _rxLen = 0;
+#endif
+#ifdef DEBUG_BOX_CN_TX_RAW_LOG
+    uint8_t _txBuf[kLogBufSize];
+    size_t  _txLen = 0;
+#endif
+};
+#endif // USE_BOX_CN
+
 // トランスポート管理クラス
 // USB-Serial または WiFi TCP の初期化・受信処理をカプセル化します。
 class Transport {
@@ -176,6 +272,8 @@ private:
     WiFiClient   _client;
     DebugStream  _debugStream;  // RAWログ用ストリームラッパー (_client をラップ)
     void _initWifi();
+#elif defined(USE_BOX_CN)
+    DebugStreamSerial _debugStream;  // RAWログ用ストリームラッパー (Serial2 をラップ)
 #endif
 };
 

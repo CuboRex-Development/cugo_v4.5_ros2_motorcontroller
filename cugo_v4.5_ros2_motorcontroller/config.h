@@ -94,6 +94,17 @@
 #define WIFI_SUBNET     IPAddress(255, 255, 255,  0)
 #endif // WIFI_STATIC_IP
 
-#endif // USE_WIFI / WIFI_AP_MODE
+// ------------------------------------------------------------
+// BOX_CN モード設定 (USE_BOX_CN 定義時のみ有効)
+// ------------------------------------------------------------
+#elif defined(USE_BOX_CN)
+
+// --- デバッグログ (開発者向け、通常はコメントアウト) ---
+// #define DEBUG_BOX_CN_TX_LOG       // COBSエンコード前の送信データをUSBシリアルに出力
+// #define DEBUG_BOX_CN_RX_LOG       // COBSデコード後の受信データをUSBシリアルに出力
+// #define DEBUG_BOX_CN_TX_RAW_LOG   // COBSエンコード後の送信データをUSBシリアルに出力
+// #define DEBUG_BOX_CN_RX_RAW_LOG   // COBSデコード前の受信データをUSBシリアルに出力
+
+#endif // USE_WIFI / WIFI_AP_MODE / USE_BOX_CN
 
 #endif // CONFIG_H_

@@ -91,6 +91,15 @@ bool RosCommParsePacket(const uint8_t *buffer, size_t size, RosCommRecvData *out
 	}
 	Serial.println();
 #endif
+#ifdef DEBUG_BOX_CN_RX_LOG
+	Serial.print("[BOX_CN RX] ");
+	for (size_t i = 0; i < size; i++) {
+		if (buffer[i] < 0x10) Serial.print('0');
+		Serial.print(buffer[i], HEX);
+		Serial.print(' ');
+	}
+	Serial.println();
+#endif
 
 	if (size < (size_t)(SERIAL_HEADER_SIZE + SERIAL_BIN_BUFF_SIZE)) {
 		return false;
@@ -175,6 +184,15 @@ void RosCommSendResponse(PacketSerial *ps, int16_t curX, int16_t curY, int16_t c
 
 #ifdef DEBUG_WIFI_TX_LOG
 	Serial.print("[WiFi TX] ");
+	for (size_t i = 0; i < sendLen; i++) {
+		if (sendPacket[i] < 0x10) Serial.print('0');
+		Serial.print(sendPacket[i], HEX);
+		Serial.print(' ');
+	}
+	Serial.println();
+#endif
+#ifdef DEBUG_BOX_CN_TX_LOG
+	Serial.print("[BOX_CN TX] ");
 	for (size_t i = 0; i < sendLen; i++) {
 		if (sendPacket[i] < 0x10) Serial.print('0');
 		Serial.print(sendPacket[i], HEX);

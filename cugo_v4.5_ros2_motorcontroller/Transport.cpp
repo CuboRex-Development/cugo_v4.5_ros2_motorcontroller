@@ -99,13 +99,28 @@ void Transport::update(void (*onNewClient)()) {
 #elif defined(USE_BOX_CN)
 
 void Transport::begin(PacketHandlerFn handler) {
-    // UART1 ピン設定 (GP8: TX, GP9: RX)
+    // USBシリアル出力が必要なフラグがいずれか有効なら Serial を起動する
+#if defined(DEBUG_BOX_CN_TX_LOG) || defined(DEBUG_BOX_CN_RX_LOG) || \
+    defined(DEBUG_BOX_CN_TX_RAW_LOG) || defined(DEBUG_BOX_CN_RX_RAW_LOG)
+    Serial.begin(115200);
+    delay(1000);
+#endif
+
+    // UART1 ピン設定・初期化 (GP8: TX, GP9: RX)
     Serial2.setTX(8);
     Serial2.setRX(9);
+    Serial2.begin(115200);
 
     // PacketSerial 初期化 (COBSエンコード/デコード、UART1/Serial2 使用)
+    // PacketSerial.begin() は内部で Serial (USB CDC) を初期化するが、
+    // 直後に setStream(&Serial2) で Serial2 に切り替えるため問題ない
     _packetSerial.begin(115200);
+#if defined(DEBUG_BOX_CN_TX_RAW_LOG) || defined(DEBUG_BOX_CN_RX_RAW_LOG)
+    _debugStream.setInner(&Serial2);
+    _packetSerial.setStream(&_debugStream);
+#else
     _packetSerial.setStream(&Serial2);
+#endif
     _packetSerial.setPacketHandler(handler);
 
     // 起動直後のシリアルバッファをクリア
