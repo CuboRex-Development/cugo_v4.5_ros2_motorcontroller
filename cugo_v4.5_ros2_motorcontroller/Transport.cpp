@@ -94,7 +94,39 @@ void Transport::update(void (*onNewClient)()) {
 }
 
 // ============================================================
-// Serial モード (USE_WIFI 未定義)
+// BOX_CN モード (USE_BOX_CN 定義時: 基板上のボックスコネクタにあるUARTピンを使用するモード)
+// ============================================================
+#elif defined(USE_BOX_CN)
+
+void Transport::begin(PacketHandlerFn handler) {
+    // UART1 ピン設定 (GP8: TX, GP9: RX)
+    Serial2.setTX(8);
+    Serial2.setRX(9);
+
+    // PacketSerial 初期化 (COBSエンコード/デコード、UART1/Serial2 使用)
+    _packetSerial.begin(115200);
+    _packetSerial.setStream(&Serial2);
+    _packetSerial.setPacketHandler(handler);
+
+    // 起動直後のシリアルバッファをクリア
+    delay(100);
+    while (Serial2.available() > 0) {
+        Serial2.read();
+    }
+}
+
+void Transport::update(void (*onNewClient)()) {
+    (void)onNewClient;  // BOX_CN モードでは使用しない
+
+    _packetSerial.update();
+
+    if (_packetSerial.overflow()) {
+        // 現状は無視 (必要に応じてエラー通知等を追加)
+    }
+}
+
+// ============================================================
+// Serial モード (USE_WIFI・USE_BOX_CN いずれも未定義)
 // ============================================================
 #else
 
@@ -121,4 +153,4 @@ void Transport::update(void (*onNewClient)()) {
     }
 }
 
-#endif // USE_WIFI
+#endif // USE_WIFI / USE_BOX_CN

@@ -10,19 +10,30 @@
 // 通信モード選択
 // ============================================================
 // このセクションで定義されている #define のコメントを外すことで、使用する通信モードを選択してください。
-// 
+// 複数を同時に有効にすることはできません。
+//
 //   USB-Serial モード (デフォルト)
-//     → USE_WIFI をコメントアウトのまま
+//     → USE_WIFI・USE_BOX_CN をコメントアウトのまま
+//
+//   BOX_CN モード (基板上のボックスコネクタにあるUARTピンを使用するモード)
+//     → USE_BOX_CN のコメントを外す
+//       USE_WIFI はコメントアウトのまま
 //
 //   WiFi APモード (Pico 2WH 自身がアクセスポイント・ルータ不要)
 //     → USE_WIFI と WIFI_AP_MODE の両方のコメントを外す
+//       USE_BOX_CN はコメントアウトのまま
 //
 //   WiFi Stationモード (外部ルータ経由)
 //     → USE_WIFI のコメントを外す
-//       WIFI_AP_MODE はコメントアウトのまま
+//       WIFI_AP_MODE・USE_BOX_CN はコメントアウトのまま
 
+// #define USE_BOX_CN      // 基板上のボックスコネクタにあるUARTピンを使用するモード
 // #define USE_WIFI
 // #define WIFI_AP_MODE    // USE_WIFI 定義時のみ有効
+
+#if defined(USE_BOX_CN) && defined(USE_WIFI)
+#error "USE_BOX_CN と USE_WIFI を同時に定義することはできません"
+#endif
 
 // ============================================================
 // 各モードのパラメータ設定

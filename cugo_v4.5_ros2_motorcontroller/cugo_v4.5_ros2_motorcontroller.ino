@@ -9,9 +9,11 @@
 // 対象ボード: Raspberry Pi Pico 2WH
 //
 // 通信ポート:
-//   USB-Serial モード: Serial (USB CDC)  — ROSコントローラノードとの通信
-//   WiFi モード:       WiFi (TCP)        — ROSコントローラノードとの通信
-//   (config.h の USE_WIFI で切り替え)
+//   USB-Serial モード: Serial (USB CDC)              — ROSコントローラノードとの通信
+//   BOX_CN モード:     Serial2/UART1 (GP8:TX/GP9:RX) — ROSコントローラノードとの通信
+//                      基板上のボックスコネクタにあるUARTピンを使用するモード
+//   WiFi モード:       WiFi (TCP)                    — ROSコントローラノードとの通信
+//   (config.h の USE_BOX_CN / USE_WIFI で切り替え)
 //   Serial1 (UART0): CRST01A車両コントローラとの通信 (crst01a_arduino_lib使用)
 //
 // 使用ライブラリ:
