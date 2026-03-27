@@ -75,6 +75,7 @@ void Transport::update(void (*onNewClient)()) {
         _client.stop();  // 半開き接続のリソースを解放する
         WiFiClient newClient = _server.accept();
         if (newClient) {
+            newClient.setNoDelay(true);  // Nagle's Algorithm を無効化し応答遅延を防ぐ
             _client = newClient;
             _debugStream.setInner(&_client);
             _packetSerial.setStream(&_debugStream);
