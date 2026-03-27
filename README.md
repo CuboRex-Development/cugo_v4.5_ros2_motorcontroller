@@ -184,15 +184,16 @@ WiFi モードでは `config.h` に以下のデバッグフラグを用意して
 1秒ごとに以下の形式でループ統計を出力します。
 
 ```text
-[STATS] loops/s=1000  maxLoop=2500us  maxUpdate=1500us  maxDelay1=1500us
+[STATS] loops/s=1000  maxLoop=2500us  maxUpdate=650us  maxDelay1=1500us  maxAvail=74B
 ```
 
 | フィールド | 内容 |
 | --- | --- |
 | `loops/s` | 1秒間のループ実行回数。CPU飽和やブロッキングの有無を示す |
 | `maxLoop` | 1ループあたりの最大所要時間 [µs]。この値が大きいほど特定のループで処理が詰まっている |
-| `maxUpdate` | `transport.update()` の最大所要時間 [µs]。WiFi TCP受信処理（PacketSerial読み出し）の負荷 |
+| `maxUpdate` | `transport.update()` の最大所要時間 [µs]。WiFi TCP受信処理の負荷 |
 | `maxDelay1` | `delay(1)` の実際の最大所要時間 [µs]。CYW43 WiFiスタックのバックグラウンド処理コスト |
+| `maxAvail` | `update()` 呼び出し直前の TCP 受信バッファの最大蓄積バイト数。1パケット = 74B |
 
 各値は1秒ごとにリセットされるウィンドウ内の最大値です。
 
@@ -201,6 +202,7 @@ WiFi モードでは `config.h` に以下のデバッグフラグを用意して
 - `maxUpdate` が大きい → WiFi TCP受信処理が重い（パケット受信時のみ増加する）
 - `maxDelay1` が大きい → CYW43スタックがARP/TCPの管理処理を実施している
 - `loops/s` が極端に低い → ループ全体がブロッキングされている
+- `maxAvail` が 74B 以上 → パケットが蓄積されている。74B の倍数でパケット数がわかる（148B = 2パケット、222B = 3パケット、...）
 
 > [!WARNING]
 > `DEBUG_WIFI_*` フラグは USB-Serial モード（`USE_WIFI` 未定義時）では使用できません。USB-Serial モードでは Serial ポートを ROS との通信に使用するため、ログ出力と競合します。
