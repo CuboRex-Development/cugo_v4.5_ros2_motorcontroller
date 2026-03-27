@@ -98,6 +98,7 @@ uint32_t statsLoopCount   = 0;  // 1秒間のループ実行回数
 uint32_t statsLoopMaxUs   = 0;  // ループ1回の最大所要時間 [µs]
 uint32_t statsUpdateMaxUs = 0;  // transport.update() の最大所要時間 [µs]
 uint32_t statsDelayMaxUs  = 0;  // delay(1) の実際の最大所要時間 [µs]
+uint32_t statsAvailMax    = 0;  // update() 呼び出し直前の TCP受信バッファの最大バイト数
 #endif
 
 // フェイルセーフ状態フラグ (通信断によるフェイルセーフ発動中)
@@ -226,11 +227,13 @@ void PrintSerialStats(void) {
 	Serial.print("[STATS] loops/s=");  Serial.print(statsLoopCount);
 	Serial.print("  maxLoop=");        Serial.print(statsLoopMaxUs);   Serial.print("us");
 	Serial.print("  maxUpdate=");      Serial.print(statsUpdateMaxUs); Serial.print("us");
-	Serial.print("  maxDelay1=");      Serial.print(statsDelayMaxUs);  Serial.println("us");
+	Serial.print("  maxDelay1=");      Serial.print(statsDelayMaxUs);  Serial.print("us");
+	Serial.print("  maxAvail=");       Serial.print(statsAvailMax);    Serial.println("B");
 	statsLoopCount   = 0;
 	statsLoopMaxUs   = 0;
 	statsUpdateMaxUs = 0;
 	statsDelayMaxUs  = 0;
+	statsAvailMax    = 0;
 }
 #endif
 
@@ -290,6 +293,8 @@ void loop() {
 	// トランスポート受信処理 (WiFiモードはクライアント管理も含む)
 #ifdef DEBUG_SERIAL_STATS
 	{
+		uint32_t _avail = (uint32_t)transport.clientAvailable();
+		if (_avail > statsAvailMax) statsAvailMax = _avail;
 		uint32_t _t = micros();
 		transport.update(&onNewWifiClient);
 		uint32_t _d = micros() - _t;

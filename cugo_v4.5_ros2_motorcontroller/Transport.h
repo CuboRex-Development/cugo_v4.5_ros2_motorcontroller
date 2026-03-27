@@ -24,8 +24,10 @@ typedef void (*PacketHandlerFn)(const uint8_t*, size_t);
 class DebugStream : public Stream {
 public:
     // ラップ対象ストリームを設定します。新規クライアント接続時に呼び出します。
-    void setInner(Stream* s) {
+    void setInner(WiFiClient* s) {
         _inner = s;
+        _readLen  = 0;  // 接続切り替え時に古いデータを残さないためバッファをリセット
+        _readHead = 0;
 #ifdef DEBUG_WIFI_RX_RAW_LOG
         _rxLen = 0;
 #endif
@@ -34,30 +36,48 @@ public:
 #endif
     }
 
-    int  available() override { return _inner ? _inner->available() : 0; }
-    int  peek()      override { return _inner ? _inner->peek()      : -1; }
-    void flush()     override { if (_inner) _inner->flush(); }
+    // 内部バッファに残りバイトがあればその量を、なければ TCP の available() を返す
+    int  available() override {
+        if (_readLen > 0) return (int)_readLen;
+        return _inner ? _inner->available() : 0;
+    }
+    // 内部バッファに残りバイトがあればその先頭を、なければ TCP の peek() を返す
+    int  peek() override {
+        if (_readLen > 0) return (int)_readBuf[_readHead];
+        return _inner ? _inner->peek() : -1;
+    }
+    void flush() override { if (_inner) _inner->flush(); }
 
     int read() override {
         if (!_inner) return -1;
-        int b = _inner->read();
+        // 内部バッファが空のとき、TCP から available() バイトを一括読み出しする
+        // これにより WiFiClient.read() の1バイト毎のオーバーヘッドを削減する
+        if (_readLen == 0) {
+            int avail = _inner->available();
+            if (avail <= 0) return -1;
+            int n = _inner->read(_readBuf, min((size_t)avail, kReadBufSize));
+            if (n <= 0) return -1;
+            _readLen  = (size_t)n;
+            _readHead = 0;
+        }
+        // 内部バッファから 1 バイト返す
+        uint8_t b = _readBuf[_readHead++];
+        _readLen--;
 #ifdef DEBUG_WIFI_RX_RAW_LOG
-        if (b >= 0) {
-            if ((uint8_t)b == 0x00) {
-                Serial.print("[WiFi RX RAW] ");
-                for (size_t i = 0; i < _rxLen; i++) {
-                    if (_rxBuf[i] < 0x10) Serial.print('0');
-                    Serial.print(_rxBuf[i], HEX);
-                    Serial.print(' ');
-                }
-                Serial.println();
-                _rxLen = 0;
-            } else if (_rxLen < kBufSize) {
-                _rxBuf[_rxLen++] = (uint8_t)b;
+        if (b == 0x00) {
+            Serial.print("[WiFi RX RAW] ");
+            for (size_t i = 0; i < _rxLen; i++) {
+                if (_rxBuf[i] < 0x10) Serial.print('0');
+                Serial.print(_rxBuf[i], HEX);
+                Serial.print(' ');
             }
+            Serial.println();
+            _rxLen = 0;
+        } else if (_rxLen < kLogBufSize) {
+            _rxBuf[_rxLen++] = b;
         }
 #endif
-        return b;
+        return (int)b;
     }
 
     size_t write(uint8_t b) override {
@@ -71,7 +91,7 @@ public:
             }
             Serial.println();
             _txLen = 0;
-        } else if (_txLen < kBufSize) {
+        } else if (_txLen < kLogBufSize) {
             _txBuf[_txLen++] = b;
         }
 #endif
@@ -90,7 +110,7 @@ public:
                 }
                 Serial.println();
                 _txLen = 0;
-            } else if (_txLen < kBufSize) {
+            } else if (_txLen < kLogBufSize) {
                 _txBuf[_txLen++] = buf[i];
             }
         }
@@ -99,14 +119,24 @@ public:
     }
 
 private:
-    Stream* _inner = nullptr;
-    static const size_t kBufSize = 128;  // COBS パケット最大長 (72バイト + マージン)
+    WiFiClient* _inner = nullptr;
+
+    // 一括読み出しバッファ: TCP から available() バイトをまとめて取得し PacketSerial に提供する
+    // サイズは観測された最大蓄積量 444B (6パケット) を上回る余裕を持たせた値
+    // available() がこのサイズを超える場合は複数回に分けて読み出す (動作は正しく継続する)
+    static const size_t kReadBufSize = 512;
+    uint8_t _readBuf[kReadBufSize];
+    size_t  _readHead = 0;
+    size_t  _readLen  = 0;
+
+    // RAWログ用バッファ: COBS パケット終端 (0x00) までのバイト列を蓄積してまとめて出力する
+    static const size_t kLogBufSize = 128;  // 1パケット最大長 (74バイト + マージン)
 #ifdef DEBUG_WIFI_RX_RAW_LOG
-    uint8_t _rxBuf[kBufSize];
+    uint8_t _rxBuf[kLogBufSize];
     size_t  _rxLen = 0;
 #endif
 #ifdef DEBUG_WIFI_TX_RAW_LOG
-    uint8_t _txBuf[kBufSize];
+    uint8_t _txBuf[kLogBufSize];
     size_t  _txLen = 0;
 #endif
 };
@@ -127,6 +157,16 @@ public:
 
     // 応答送信に使用する PacketSerial への参照を返します
     PacketSerial& serial() { return _packetSerial; }
+
+    // TCPクライアントの受信バッファに溜まっているバイト数を返します (WiFiモードのみ有効)
+    // DEBUG_SERIAL_STATS でのパケット蓄積量の計測に使用します
+    int clientAvailable() {
+#ifdef USE_WIFI
+        return _client.available();
+#else
+        return 0;
+#endif
+    }
 
 private:
     PacketSerial _packetSerial;
