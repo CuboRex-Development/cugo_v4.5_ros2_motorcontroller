@@ -61,18 +61,16 @@ cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ [cugo_v4.5_ros2_contro
    ```bash
    git clone --recurse-submodules <repository-url>
    ```
-2. [arduino-pico](https://github.com/earlephilhower/arduino-pico)を参照し、Raspberry Pi Pico/RP2040/RP2350 をボードマネージャに追加します。
 
+2. [crst01a_arduino_lib](https://github.com/CuboRex-Development/crst01a_arduino_lib)の手順に従い、`crst01a_arduino_lib` を Arduino IDE のライブラリとして追加します。
 
 3. Arduino IDE のライブラリマネージャから `PacketSerial` をインストールします。
 
-4. `crst01a_arduino_lib` を Arduino IDE のライブラリとして追加します。
+4. `cugo_v4.5_ros2_motorcontroller/cugo_v4.5_ros2_motorcontroller.ino` を Arduino IDE で開きます。
 
-5. `cugo_v4.5_ros2_motorcontroller/cugo_v4.5_ros2_motorcontroller.ino` を Arduino IDE で開きます。
+5. [Configuration](#configuration)に沿い、必要に応じてプログラムの設定を変更します。
 
-6. [Configuration](#configuration)に沿い、必要に応じてプログラムの設定を変更します。
-
-7.  Arduino IDE を開いたPCとCuGo V4.5 に搭載されたRaspberry Pi Pico 2 WH をUSBケーブルで接続し、プログラムを書き込みます。
+6.  Arduino IDE を開いたPCとCuGo V4.5 に搭載されたRaspberry Pi Pico 2 WH をUSBケーブルで接続し、プログラムを書き込みます。
 
 
 以上でRaspberry Pi Pico側の手順は完了となります。引き続き、[cugo_v4.5_ros2_controlのreadme](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control)のInstallation、 Usage の手順を実施してください。
