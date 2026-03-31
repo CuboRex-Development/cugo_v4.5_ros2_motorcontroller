@@ -14,7 +14,7 @@ void Transport::_initWifi() {
 #if defined(INFO_SERIAL) || defined(DEBUG_WIFI_TX_LOG) || defined(DEBUG_WIFI_RX_LOG) || \
     defined(DEBUG_WIFI_TX_RAW_LOG) || defined(DEBUG_WIFI_RX_RAW_LOG) || defined(DEBUG_SERIAL_STATS)
     Serial.begin(115200);
-    Serial.setBlocking(false);
+    Serial.ignoreFlowControl(true);
     delay(1000);
 #endif
 
@@ -104,7 +104,7 @@ void Transport::begin(PacketHandlerFn handler) {
 #if defined(DEBUG_BOX_CN_TX_LOG) || defined(DEBUG_BOX_CN_RX_LOG) || \
     defined(DEBUG_BOX_CN_TX_RAW_LOG) || defined(DEBUG_BOX_CN_RX_RAW_LOG)
     Serial.begin(115200);
-    Serial.setBlocking(false);
+    Serial.ignoreFlowControl(true);
     delay(1000);
 #endif
 
@@ -114,9 +114,7 @@ void Transport::begin(PacketHandlerFn handler) {
     Serial2.begin(BOX_CN_BAUD_RATE);
 
     // PacketSerial 初期化 (COBSエンコード/デコード、UART1/Serial2 使用)
-    // PacketSerial.begin() は内部で Serial (USB CDC) を初期化するが、
-    // 直後に setStream(&Serial2) で Serial2 に切り替えるため問題ない
-    _packetSerial.begin(BOX_CN_BAUD_RATE);
+    // PacketSerial.begin() は内部で while(!Serial){} を呼びUSBポートが開くまでブロックするため使用しない
 #if defined(DEBUG_BOX_CN_TX_RAW_LOG) || defined(DEBUG_BOX_CN_RX_RAW_LOG)
     _debugStream.setInner(&Serial2);
     _packetSerial.setStream(&_debugStream);
@@ -221,7 +219,7 @@ void Transport::begin(PacketHandlerFn handler) {
 #if defined(INFO_SERIAL) || defined(DEBUG_BT_TX_LOG) || defined(DEBUG_BT_RX_LOG) || \
     defined(DEBUG_BT_TX_RAW_LOG) || defined(DEBUG_BT_RX_RAW_LOG)
     Serial.begin(115200);
-    Serial.setBlocking(false);
+    Serial.ignoreFlowControl(true);
     delay(1000);
 #endif
 
@@ -265,9 +263,7 @@ void Transport::begin(PacketHandlerFn handler) {
 #endif
 
     // PacketSerial 初期化 (COBSエンコード/デコード、SerialBT 使用)
-    // PacketSerial.begin() は内部で Serial (USB CDC) を初期化するが、
-    // 直後に setStream(&SerialBT) で SerialBT に切り替えるため問題ない
-    _packetSerial.begin(115200);
+    // PacketSerial.begin() は内部で while(!Serial){} を呼びUSBポートが開くまでブロックするため使用しない
 #if defined(DEBUG_BT_TX_RAW_LOG) || defined(DEBUG_BT_RX_RAW_LOG)
     _debugStream.setInner(&SerialBT);
     _packetSerial.setStream(&_debugStream);
