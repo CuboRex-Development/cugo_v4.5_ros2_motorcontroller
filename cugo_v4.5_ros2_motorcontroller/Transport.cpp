@@ -14,6 +14,7 @@ void Transport::_initWifi() {
 #if defined(INFO_SERIAL) || defined(DEBUG_WIFI_TX_LOG) || defined(DEBUG_WIFI_RX_LOG) || \
     defined(DEBUG_WIFI_TX_RAW_LOG) || defined(DEBUG_WIFI_RX_RAW_LOG) || defined(DEBUG_SERIAL_STATS)
     Serial.begin(115200);
+    Serial.setBlocking(false);
     delay(1000);
 #endif
 
@@ -103,6 +104,7 @@ void Transport::begin(PacketHandlerFn handler) {
 #if defined(DEBUG_BOX_CN_TX_LOG) || defined(DEBUG_BOX_CN_RX_LOG) || \
     defined(DEBUG_BOX_CN_TX_RAW_LOG) || defined(DEBUG_BOX_CN_RX_RAW_LOG)
     Serial.begin(115200);
+    Serial.setBlocking(false);
     delay(1000);
 #endif
 
@@ -219,6 +221,7 @@ void Transport::begin(PacketHandlerFn handler) {
 #if defined(INFO_SERIAL) || defined(DEBUG_BT_TX_LOG) || defined(DEBUG_BT_RX_LOG) || \
     defined(DEBUG_BT_TX_RAW_LOG) || defined(DEBUG_BT_RX_RAW_LOG)
     Serial.begin(115200);
+    Serial.setBlocking(false);
     delay(1000);
 #endif
 

@@ -263,7 +263,7 @@ void setup() {
 	// 走行状態 (0x81) の定期受信を有効化 (50Hz)
 	crst01a.SetCycleReq(CRST_FUNC_READ_RUN_STATUS);
 
-	// トランスポート初期化 (config.h の USE_WIFI に応じて Serial または WiFi を使用)
+	// トランスポート初期化 (config.h の 設定 に応じて ポートをひらく)
 	transport.begin(&OnSerialPacketReceived);
 }
 
