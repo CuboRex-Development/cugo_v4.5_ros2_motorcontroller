@@ -6,7 +6,7 @@
 //   PacketSerialライブラリによりCOBSエンコードされた速度指令を受信し、
 //   CRST01Aへ転送する。現在速度をROSへ返答する。
 //
-// 対象ボード: Raspberry Pi Pico 2WH
+// 対象ボード: Raspberry Pi Pico 2 WH
 //
 // 通信ポート:
 //   USB-Serial モード: Serial (USB CDC)              — ROSコントローラノードとの通信
@@ -201,10 +201,10 @@ void OnSerialPacketReceived(const uint8_t *buffer, size_t size) {
 	uint32_t sysRecvTime;
 	crst01a.GetSysStatus(&ctrlStatus, &ctrlErr, &drvErr, &drvVoltage, &sysRecvTime);
 
-	bool isErr = (millis() - sysRecvTime < CRST_SYS_STATUS_TIMEOUT_MS);
+	bool isConnected = (millis() - sysRecvTime < CRST_SYS_STATUS_TIMEOUT_MS);
 
 	// 非常停止を除くエラーがない場合のみ速度指令を転送する
-	if (isErr && !IsCrstErrorActive(ctrlErr, drvErr)) {
+	if (isConnected && !IsCrstErrorActive(ctrlErr, drvErr)) {
 		crst01a.SetMoveSpeed(recvData.xSpeed, recvData.ySpeed, recvData.yawSpeed);
 	} else {
 		crst01a.SetMoveSpeed(0, 0, 0);

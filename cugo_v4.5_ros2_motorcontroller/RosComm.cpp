@@ -72,7 +72,7 @@ static uint16_t CalcChecksum(const uint8_t *data, size_t size) {
 		uint16_t word = (static_cast<uint16_t>(data[i + 1]) << 8) | static_cast<uint16_t>(data[i]);
 		sum += word;
 	}
-	while (sum >> 16) {
+	if (sum >> 16) {
 		sum = (sum & 0xFFFF) + (sum >> 16);
 	}
 	return static_cast<uint16_t>(~sum);
@@ -93,6 +93,15 @@ bool RosCommParsePacket(const uint8_t *buffer, size_t size, RosCommRecvData *out
 #endif
 #ifdef DEBUG_BOX_CN_RX_LOG
 	Serial.print("[BOX_CN RX] ");
+	for (size_t i = 0; i < size; i++) {
+		if (buffer[i] < 0x10) Serial.print('0');
+		Serial.print(buffer[i], HEX);
+		Serial.print(' ');
+	}
+	Serial.println();
+#endif
+#ifdef DEBUG_BT_RX_LOG
+	Serial.print("[BT RX] ");
 	for (size_t i = 0; i < size; i++) {
 		if (buffer[i] < 0x10) Serial.print('0');
 		Serial.print(buffer[i], HEX);
@@ -193,6 +202,15 @@ void RosCommSendResponse(PacketSerial *ps, int16_t curX, int16_t curY, int16_t c
 #endif
 #ifdef DEBUG_BOX_CN_TX_LOG
 	Serial.print("[BOX_CN TX] ");
+	for (size_t i = 0; i < sendLen; i++) {
+		if (sendPacket[i] < 0x10) Serial.print('0');
+		Serial.print(sendPacket[i], HEX);
+		Serial.print(' ');
+	}
+	Serial.println();
+#endif
+#ifdef DEBUG_BT_TX_LOG
+	Serial.print("[BT TX] ");
 	for (size_t i = 0; i < sendLen; i++) {
 		if (sendPacket[i] < 0x10) Serial.print('0');
 		Serial.print(sendPacket[i], HEX);
