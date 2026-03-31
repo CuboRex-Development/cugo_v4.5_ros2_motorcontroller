@@ -59,7 +59,7 @@ cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ [cugo_v4.5_ros2_contro
    以下のコマンドを実行してください。  
 
    ```bash
-   git clone --recurse-submodules <repository-url>
+   git clone --recurse-submodules https://github.com/CuboRex-Development/cugo_v4.5_ros2_motorcontroller.git
    ```
 
 2. [crst01a_arduino_lib](https://github.com/CuboRex-Development/crst01a_arduino_lib)の手順に従い、`crst01a_arduino_lib` を Arduino IDE のライブラリとして追加します。
