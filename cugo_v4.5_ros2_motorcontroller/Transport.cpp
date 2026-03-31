@@ -111,12 +111,12 @@ void Transport::begin(PacketHandlerFn handler) {
     // UART1 ピン設定・初期化 (GP8: TX, GP9: RX)
     Serial2.setTX(8);
     Serial2.setRX(9);
-    Serial2.begin(115200);
+    Serial2.begin(BOX_CN_BAUD_RATE);
 
     // PacketSerial 初期化 (COBSエンコード/デコード、UART1/Serial2 使用)
     // PacketSerial.begin() は内部で Serial (USB CDC) を初期化するが、
     // 直後に setStream(&Serial2) で Serial2 に切り替えるため問題ない
-    _packetSerial.begin(115200);
+    _packetSerial.begin(BOX_CN_BAUD_RATE);
 #if defined(DEBUG_BOX_CN_TX_RAW_LOG) || defined(DEBUG_BOX_CN_RX_RAW_LOG)
     _debugStream.setInner(&Serial2);
     _packetSerial.setStream(&_debugStream);

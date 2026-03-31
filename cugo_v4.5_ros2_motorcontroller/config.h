@@ -56,6 +56,9 @@
 // ------------------------------------------------------------
 #if defined(USE_BOX_CN)
 
+// --- ボーレート設定 ---
+#define BOX_CN_BAUD_RATE    (115200)    // BOX_CN (UART) 通信速度 [bps] (例: 115200, 921600)
+
 // --- デバッグログ (開発者向け、通常はコメントアウト) ---
 // #define DEBUG_BOX_CN_TX_LOG       // COBSエンコード前の送信データをUSBシリアルに出力
 // #define DEBUG_BOX_CN_RX_LOG       // COBSデコード後の受信データをUSBシリアルに出力
