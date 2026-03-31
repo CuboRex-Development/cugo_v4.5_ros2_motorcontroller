@@ -52,9 +52,36 @@
 // ============================================================
 
 // ------------------------------------------------------------
+// BOX_CN モード設定 (USE_BOX_CN 定義時のみ有効)
+// ------------------------------------------------------------
+#if defined(USE_BOX_CN)
+
+// --- デバッグログ (開発者向け、通常はコメントアウト) ---
+// #define DEBUG_BOX_CN_TX_LOG       // COBSエンコード前の送信データをUSBシリアルに出力
+// #define DEBUG_BOX_CN_RX_LOG       // COBSデコード後の受信データをUSBシリアルに出力
+// #define DEBUG_BOX_CN_TX_RAW_LOG   // COBSエンコード後の送信データをUSBシリアルに出力
+// #define DEBUG_BOX_CN_RX_RAW_LOG   // COBSデコード前の受信データをUSBシリアルに出力
+
+// ------------------------------------------------------------
+// Bluetooth モード設定 (USE_BLUETOOTH 定義時のみ有効)
+// ------------------------------------------------------------
+#elif defined(USE_BLUETOOTH)
+
+#define BT_DEVICE_NAME  "CuGo_BT"   // Bluetooth デバイス名 (ペアリング時に表示される名前)
+
+// 起動時に通信モードとデバイス名をUSBシリアルに出力します (無効にする場合はコメントアウト)
+#define INFO_SERIAL
+
+// --- デバッグログ (開発者向け、通常はコメントアウト) ---
+// #define DEBUG_BT_TX_LOG       // COBSエンコード前の送信データをUSBシリアルに出力
+// #define DEBUG_BT_RX_LOG       // COBSデコード後の受信データをUSBシリアルに出力
+// #define DEBUG_BT_TX_RAW_LOG   // COBSエンコード後の送信データをUSBシリアルに出力
+// #define DEBUG_BT_RX_RAW_LOG   // COBSデコード前の受信データをUSBシリアルに出力
+
+// ------------------------------------------------------------
 // WiFi APモード設定 (USE_WIFI かつ WIFI_AP_MODE 定義時のみ有効)
 // ------------------------------------------------------------
-#if defined(USE_WIFI) && defined(WIFI_AP_MODE)
+#elif defined(USE_WIFI) && defined(WIFI_AP_MODE)
 
 #define WIFI_AP_SSID        "CuGo_AP"   // アクセスポイントの SSID
 #define WIFI_AP_PASSWORD    "cugo1234"  // アクセスポイントのパスワード
@@ -105,33 +132,6 @@
 #define WIFI_GATEWAY    IPAddress(192, 168,  0,   1)
 #define WIFI_SUBNET     IPAddress(255, 255, 255,  0)
 #endif // WIFI_STATIC_IP
-
-// ------------------------------------------------------------
-// BOX_CN モード設定 (USE_BOX_CN 定義時のみ有効)
-// ------------------------------------------------------------
-#elif defined(USE_BOX_CN)
-
-// --- デバッグログ (開発者向け、通常はコメントアウト) ---
-// #define DEBUG_BOX_CN_TX_LOG       // COBSエンコード前の送信データをUSBシリアルに出力
-// #define DEBUG_BOX_CN_RX_LOG       // COBSデコード後の受信データをUSBシリアルに出力
-// #define DEBUG_BOX_CN_TX_RAW_LOG   // COBSエンコード後の送信データをUSBシリアルに出力
-// #define DEBUG_BOX_CN_RX_RAW_LOG   // COBSデコード前の受信データをUSBシリアルに出力
-
-// ------------------------------------------------------------
-// Bluetooth SPP モード設定 (USE_BLUETOOTH 定義時のみ有効)
-// ------------------------------------------------------------
-#elif defined(USE_BLUETOOTH)
-
-#define BT_DEVICE_NAME  "CuGo_BT"   // Bluetooth デバイス名 (ペアリング時に表示される名前)
-
-// 起動時に通信モードとデバイス名をUSBシリアルに出力します (無効にする場合はコメントアウト)
-#define INFO_SERIAL
-
-// --- デバッグログ (開発者向け、通常はコメントアウト) ---
-// #define DEBUG_BT_TX_LOG       // COBSエンコード前の送信データをUSBシリアルに出力
-// #define DEBUG_BT_RX_LOG       // COBSデコード後の受信データをUSBシリアルに出力
-// #define DEBUG_BT_TX_RAW_LOG   // COBSエンコード後の送信データをUSBシリアルに出力
-// #define DEBUG_BT_RX_RAW_LOG   // COBSデコード前の受信データをUSBシリアルに出力
 
 #endif // USE_WIFI / WIFI_AP_MODE / USE_BOX_CN / USE_BLUETOOTH
 
