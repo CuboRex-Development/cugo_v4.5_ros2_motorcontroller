@@ -148,7 +148,7 @@ void Transport::update(void (*onNewClient)()) {
 // 接続確立後にリンク監視タイムアウト無効化コマンドを遅延送信するための変数。
 // hci_send_cmd() はコールバック内から直接呼ぶと BTstack の再入エラーになるため、
 // ハンドルをここに保存し update() から安全なタイミングで送信する。
-static uint16_t _pendingSupervisionTimeoutHandle = HCI_CON_HANDLE_INVALID;
+static volatile uint16_t _pendingSupervisionTimeoutHandle = HCI_CON_HANDLE_INVALID;
 
 // HCI イベントハンドラ: 接続管理 (常時有効) + ペアリング/接続/切断ログ (INFO_SERIAL 時のみ)
 //
@@ -282,11 +282,10 @@ void Transport::update(void (*onNewClient)()) {
     // 接続確立時に保存した接続ハンドルに対してリンク監視タイムアウトを無効化する。
     // hci_send_cmd() はコールバック内から呼ぶと再入エラーになるため、
     // ここで BTstack がコマンド送信可能なタイミングを確認してから送信する。
-    if (_pendingSupervisionTimeoutHandle != HCI_CON_HANDLE_INVALID &&
-        hci_can_send_command_packet_now()) {
-        hci_send_cmd(&hci_write_link_supervision_timeout,
-                     _pendingSupervisionTimeoutHandle, 0x0000);
+    uint16_t handle = _pendingSupervisionTimeoutHandle;
+    if (handle != HCI_CON_HANDLE_INVALID && hci_can_send_command_packet_now()) {
         _pendingSupervisionTimeoutHandle = HCI_CON_HANDLE_INVALID;
+        hci_send_cmd(&hci_write_link_supervision_timeout, handle, 0x0000);
     }
 
     if (_packetSerial.overflow()) {

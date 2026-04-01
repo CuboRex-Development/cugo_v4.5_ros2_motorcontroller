@@ -19,7 +19,7 @@
 //     → USE_BOX_CN のコメントを外す
 //       USE_WIFI・USE_BLUETOOTH はコメントアウトのまま
 //
-//   WiFi APモード (Pico 2WH 自身がアクセスポイント・ルータ不要)
+//   WiFi APモード (Raspberry Pi Pico 2 W 自身がアクセスポイント・ルータ不要)
 //     → USE_WIFI と WIFI_AP_MODE の両方のコメントを外す
 //       USE_BOX_CN・USE_BLUETOOTH はコメントアウトのまま
 //
@@ -104,6 +104,7 @@
 //                                 //   maxLoop   : ループ1回の最大所要時間 [µs]
 //                                 //   maxUpdate : transport.update() の最大所要時間 [µs] (WiFi TCP受信処理)
 //                                 //   maxDelay1 : delay(1) の実際の最大所要時間 [µs] (CYW43スタック処理)
+//                                 //   maxAvail  : update() 呼び出し直前の TCP 受信バッファの最大蓄積バイト数 (1パケット = 74B)
 
 // ------------------------------------------------------------
 // WiFi Stationモード設定 (USE_WIFI 定義かつ WIFI_AP_MODE 未定義時のみ有効)
@@ -127,6 +128,7 @@
 //                                 //   maxLoop   : ループ1回の最大所要時間 [µs]
 //                                 //   maxUpdate : transport.update() の最大所要時間 [µs] (WiFi TCP受信処理)
 //                                 //   maxDelay1 : delay(1) の実際の最大所要時間 [µs] (CYW43スタック処理)
+//                                 //   maxAvail  : update() 呼び出し直前の TCP 受信バッファの最大蓄積バイト数 (1パケット = 74B)
 
 // 静的IPを使用する場合はコメントを外して各アドレスを設定してください
 // #define WIFI_STATIC_IP

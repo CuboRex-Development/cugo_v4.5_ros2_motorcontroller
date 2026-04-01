@@ -1,10 +1,10 @@
-// CuGo V4.5 ROS2モータコントローラ
+// CuGo V4.5 ROS 2 モータコントローラ
 //
 // 概要:
-//   cugo_v4.5_ros2_control (ROSコントローラノード) と通信し、
+//   cugo_v4.5_ros2_control (ROS 2 コントローラノード) と通信し、
 //   CRST01A車両コントローラを制御するArduinoプログラム。
 //   PacketSerialライブラリによりCOBSエンコードされた速度指令を受信し、
-//   CRST01Aへ転送する。現在速度をROSへ返答する。
+//   CRST01Aへ転送する。現在速度をROS 2 へ返答する。
 //
 // 対象ボード: Raspberry Pi Pico 2 W
 //
@@ -86,10 +86,10 @@ void Job1000ms(void) {
 Transport transport;
 
 // タイムスタンプ (オーバーフローしても符号なし演算で正常に動作する)
-unsigned long long currentTime = 0;
-unsigned long long prevTime10ms = 0;
-unsigned long long prevTime100ms = 0;
-unsigned long long prevTime1000ms = 0;
+unsigned long currentTime = 0;
+unsigned long prevTime10ms = 0;
+unsigned long prevTime100ms = 0;
+unsigned long prevTime1000ms = 0;
 
 // 通信失敗カウンタ (フェイルセーフ用)
 int comFailCount = 0;
