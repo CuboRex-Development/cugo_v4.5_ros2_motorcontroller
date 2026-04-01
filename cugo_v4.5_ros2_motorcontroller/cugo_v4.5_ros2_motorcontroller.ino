@@ -6,7 +6,7 @@
 //   PacketSerialライブラリによりCOBSエンコードされた速度指令を受信し、
 //   CRST01Aへ転送する。現在速度をROSへ返答する。
 //
-// 対象ボード: Raspberry Pi Pico 2 WH
+// 対象ボード: Raspberry Pi Pico 2 W
 //
 // 通信ポート:
 //   USB-Serial モード: Serial (USB CDC)              — ROSコントローラノードとの通信
