@@ -6,8 +6,7 @@ ROS 2パッケージ [cugo_v4.5_ros2_control](https://github.com/CuboRex-Develop
 
 ### 対応製品
 
-<!-- TODO: V4.5のリンクを貼る -->
-* [CuGo V4.5](null)
+* [CuGo V4.5](https://cuborex.com/product/?id=33)
 
 > [!WARNING]
 > クローラロボット開発プラットフォーム CuGo V4 / クローラロボット開発プラットフォーム V3i をご利用の方は [cugo_ros2_motorcontroller2](https://github.com/CuboRex-Development/cugo_ros2_motorcontroller2) を参照してください。
@@ -28,7 +27,7 @@ ROS 2パッケージ [cugo_v4.5_ros2_control](https://github.com/CuboRex-Develop
 
 cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ [cugo_v4.5_ros2_control](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control) から受信した目標速度指令をロボットに内蔵された車両コントローラ CRST01A に転送し、現在の走行速度をROS側に返答するインターフェースモジュールです。
 
-本プログラムを実行しているCuGo V4.5とROS 2 PCとの通信方式は USB-Serial をデフォルトとしていますが、その他の通信方式も選択することができます。対応している通信の詳細は[cugo_v4.5_ros2_controlのreadme](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control) の Connection をご参照ください。
+本プログラムを実行しているCuGo V4.5とROS 2 PCとの通信方式は USB-Serial をデフォルトとしていますが、その他の通信方式も選択することができます。対応している通信の詳細は[cugo_v4.5_ros2_controlのreadme](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control) の [Connection](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control#connection) をご参照ください。
 
 <img width="4077" height="2541" alt="cugo_v4 5_ros2_motorcontroller" src="https://github.com/user-attachments/assets/da7c65b4-b58b-493c-92b3-0094dca43b07" />
 
@@ -81,7 +80,7 @@ cugo_v4.5_ros2_motorcontroller は、ROS 2パッケージ [cugo_v4.5_ros2_contro
 ROS 2 PC との接続方法に合わせて、プログラムの設定を変更します。
 
 編集するファイルは `config.h` のみです。それ以外のソースファイルを編集する必要はありません。
-接続方法の詳細は[cugo_v4.5_ros2_controlのreadme](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control) の Connection の章をご参照ください。
+接続方法の詳細は[cugo_v4.5_ros2_controlのreadme](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control) の [Connection の章](https://github.com/CuboRex-Development/cugo_v4.5_ros2_control#connection) をご参照ください。
 
 ### USB-Serial 接続(デフォルト)
 
