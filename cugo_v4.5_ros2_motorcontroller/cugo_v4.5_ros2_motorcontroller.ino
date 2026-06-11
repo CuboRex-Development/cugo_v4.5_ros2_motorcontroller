@@ -377,23 +377,23 @@ void setup() {
 	crst01a.Init();
 	delay(CRST_INIT_WAIT_MS);
 
-	// システムステータス (0x80) の定期受信を有効化 (50Hz)
+	// システムステータス (0x80) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_SYS_STATUS);
 
-	// 走行状態 (0x81) の定期受信を有効化 (50Hz)
+	// 走行状態 (0x81) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_RUN_STATUS);
 
-	// 外部IO (0x84) の定期受信を有効化 (50Hz)
+	// 外部IO (0x84) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_EXT_IO);
 
-	// モータエンコーダ (0x88, 0x89) の定期受信を有効化 (50Hz)
+	// モータエンコーダ (0x88, 0x89) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_ENCODER_01);
 	crst01a.SetCycleReq(CRST_FUNC_READ_ENCODER_23);
 
-	// モータドライバ温度 (0x8C) の定期受信を有効化 (50Hz)
+	// モータドライバ温度 (0x8C) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_MD_TEMP);
 
-	// モータドライバ状態 (0x8E) の定期受信を有効化 (50Hz)
+	// モータドライバ状態 (0x8E) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_MD_STATUS);
 
 	// トランスポート初期化 (config.h の 設定 に応じて ポートをひらく)
