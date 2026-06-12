@@ -376,6 +376,12 @@ void setup() {
 	// CRST01A初期化 (CMDモードへの移行はハンドシェイク後に行う)
 	crst01a.Init();
 
+	// CRST01A サンプルで使用されている定期ヘルスチェックを無効化
+	crst01a.SetHealthCheckSend(false);
+
+	// CRST01A 定期送信が来なかったときに再度定期送信を有効化する機能を有効化
+	crst01a.SetCycleResend(true);
+
 	// 定期送信コマンドの送信周期を50Hzに設定
 	crst01a.SetCycleReqFrequency(CRST_CYCLE_REQ_50HZ);
 
