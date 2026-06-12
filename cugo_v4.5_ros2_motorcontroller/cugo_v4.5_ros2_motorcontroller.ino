@@ -30,9 +30,6 @@
 // ----------------------------------------------------------------------------
 // CRST01A定数
 // ----------------------------------------------------------------------------
-// CRST01A初期化待機時間 (ms)
-#define CRST_INIT_WAIT_MS               (200)
-
 // 走行状態 (0x81) データの有効期限 (ms)
 #define CRST_RUN_STATUS_TIMEOUT_MS      (500)
 
@@ -375,7 +372,6 @@ void onNewWifiClient(void) {
 void setup() {
 	// CRST01A初期化 (CMDモードへの移行はハンドシェイク後に行う)
 	crst01a.Init();
-	delay(CRST_INIT_WAIT_MS);
 
 	// 定期送信コマンドの送信周期を50Hzに設定
 	crst01a.SetCycleReqFrequency(0x02);
