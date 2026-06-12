@@ -377,6 +377,9 @@ void setup() {
 	crst01a.Init();
 	delay(CRST_INIT_WAIT_MS);
 
+	// 定期送信コマンドの送信周期を50Hzに設定
+	crst01a.SetCycleReqFrequency(0x02);
+
 	// システムステータス (0x80) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_SYS_STATUS);
 
