@@ -42,6 +42,9 @@
 // バンパー・ブレーキ設定 (0xC4) データの有効期限 (ms) (1秒ごとに要求するため2倍の余裕)
 #define CRST_BUMPER_BRAKE_TIMEOUT_MS    (2000)
 
+// 定期送信コマンド周期設定 50Hz
+#define CRST_CYCLE_REQ_50HZ             (0x02)
+
 // コントローラエラービット (0x80 controller error)
 #define CRST_ERR_CTL_SERIAL_TIMEOUT     (0x40)  // bit6: シリアルタイムアウトエラー
 // 非常停止関連エラービット (CRST01A側で停止を制御するため、速度制限対象外とする)
@@ -374,7 +377,7 @@ void setup() {
 	crst01a.Init();
 
 	// 定期送信コマンドの送信周期を50Hzに設定
-	crst01a.SetCycleReqFrequency(0x02);
+	crst01a.SetCycleReqFrequency(CRST_CYCLE_REQ_50HZ);
 
 	// システムステータス (0x80) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_SYS_STATUS);
