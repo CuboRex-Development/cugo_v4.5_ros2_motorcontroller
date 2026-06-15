@@ -14,13 +14,13 @@
 // ----------------------------------------------------------------------------
 // 受信ボディ内オフセット (PC→RPi)
 // ----------------------------------------------------------------------------
-#define TARGET_X_SPEED_PTR              (0)     // 目標X方向速度 (int16_t)
-#define TARGET_Y_SPEED_PTR              (2)     // 目標Y方向速度 (int16_t)
-#define TARGET_THETA_SPEED_PTR          (4)     // 目標旋回速度  (int16_t)
-#define RECV_BODY_ENABLE_7_14_PTR       (6)     // enable_7_14         (uint8_t)
-#define RECV_BODY_MODE_SWITCH_PTR       (7)     // mode_switch         (uint8_t)
-#define RECV_BODY_EMERGENCY_DECEL_PTR   (8)     // emergency_decel     (uint8_t)
-#define RECV_BODY_RESET_CTRL_ERR_PTR    (9)     // reset_ctrl_error    (uint8_t)
+#define TARGET_X_SPEED_PTR              ( 0)    // 目標X方向速度 (int16_t)
+#define TARGET_Y_SPEED_PTR              ( 2)    // 目標Y方向速度 (int16_t)
+#define TARGET_THETA_SPEED_PTR          ( 4)    // 目標旋回速度  (int16_t)
+#define RECV_BODY_ENABLE_7_14_PTR       ( 6)    // enable_7_14         (uint8_t)
+#define RECV_BODY_MODE_SWITCH_PTR       ( 7)    // mode_switch         (uint8_t)
+#define RECV_BODY_EMERGENCY_DECEL_PTR   ( 8)    // emergency_decel     (uint8_t)
+#define RECV_BODY_RESET_CTRL_ERR_PTR    ( 9)    // reset_ctrl_error    (uint8_t)
 #define RECV_BODY_RESET_MD_ERR_PTR      (10)    // reset_md_error      (uint8_t)
 #define RECV_BODY_HEADLIGHT_CMD_PTR     (11)    // headlight_control   (uint8_t)
 #define RECV_BODY_TOWERLIGHT_CMD_PTR    (12)    // towerlight_control  (uint8_t)
@@ -32,32 +32,33 @@
 // ----------------------------------------------------------------------------
 // 送信ボディ内オフセット (RPi→PC)
 // ----------------------------------------------------------------------------
-#define SEND_X_SPEED_PTR            (0)     // 現在X方向速度       (int16_t)
-#define SEND_Y_SPEED_PTR            (2)     // 現在Y方向速度       (int16_t)
-#define SEND_THETA_SPEED_PTR        (4)     // 現在旋回速度        (int16_t)
-#define SEND_CTRL_STATUS_PTR        (6)     // controller_status   (uint8_t)
-#define SEND_CTRL_ERR_PTR           (7)     // controller_error    (uint8_t)
-#define SEND_MD_ERR_PTR             (8)     // motordriver_error   (uint8_t)
-#define SEND_DRIVER_VOLTAGE_PTR     (9)     // driver_voltage_raw  (uint16_t)
-#define SEND_HEADLIGHT_PTR          (11)    // headlight_status    (uint8_t)
-#define SEND_TOWERLIGHT_PTR         (12)    // towerlight_status   (uint8_t)
-#define SEND_IO_INPUT_PTR           (13)    // io_input_status     (uint8_t)
-#define SEND_ENCODER0_PTR           (14)    // encoder_motor0      (uint32_t)
-#define SEND_ENCODER1_PTR           (18)    // encoder_motor1      (uint32_t)
-#define SEND_ENCODER2_PTR           (22)    // encoder_motor2      (uint32_t)
-#define SEND_ENCODER3_PTR           (26)    // encoder_motor3      (uint32_t)
-#define SEND_MD_TEMP0_PTR           (30)    // motordriver_temp0   (uint16_t)
-#define SEND_MD_TEMP1_PTR           (32)    // motordriver_temp1   (uint16_t)
-#define SEND_MD_TEMP2_PTR           (34)    // motordriver_temp2   (uint16_t)
-#define SEND_MD_TEMP3_PTR           (36)    // motordriver_temp3   (uint16_t)
-#define SEND_MD_ERR_CODE0_PTR       (38)    // motordriver_error_code0 (uint16_t)
-#define SEND_MD_ERR_CODE1_PTR       (40)    // motordriver_error_code1 (uint16_t)
-#define SEND_MD_ERR_CODE2_PTR       (42)    // motordriver_error_code2 (uint16_t)
-#define SEND_MD_ERR_CODE3_PTR       (44)    // motordriver_error_code3 (uint16_t)
-#define SEND_BUMPER_CONFIG_PTR      (46)    // bumper_config       (uint8_t)
-#define SEND_BRAKE_CONFIG_PTR       (47)    // brake_config        (uint8_t)
-#define SEND_PRODUCT_ID_PTR         (60)    // プロダクトID        (uint16_t)
-#define SEND_ROBOT_ID_PTR           (62)    // ロボットID          (uint16_t)
+#define SEND_X_SPEED_PTR             ( 0)   // 現在X方向速度       (int16_t)
+#define SEND_Y_SPEED_PTR             ( 2)   // 現在Y方向速度       (int16_t)
+#define SEND_THETA_SPEED_PTR         ( 4)   // 現在旋回速度        (int16_t)
+#define SEND_CTRL_STATUS_PTR         ( 6)   // controller_status   (uint8_t)
+#define SEND_CTRL_ERR_PTR            ( 7)   // controller_error    (uint8_t)
+#define SEND_MD_ERR_PTR              ( 8)   // motordriver_error   (uint8_t)
+#define SEND_DRIVER_VOLTAGE_PTR      ( 9)   // driver_voltage_raw  (uint16_t)
+#define SEND_HEADLIGHT_PTR           (11)   // headlight_status    (uint8_t)
+#define SEND_TOWERLIGHT_PTR          (12)   // towerlight_status   (uint8_t)
+#define SEND_IO_INPUT_PTR            (13)   // io_input_status     (uint8_t)
+#define SEND_ENCODER0_PTR            (14)   // encoder_motor0      (uint32_t)
+#define SEND_ENCODER1_PTR            (18)   // encoder_motor1      (uint32_t)
+#define SEND_ENCODER2_PTR            (22)   // encoder_motor2      (uint32_t)
+#define SEND_ENCODER3_PTR            (26)   // encoder_motor3      (uint32_t)
+#define SEND_MD_TEMP0_PTR            (30)   // motordriver_temp0   (uint16_t)
+#define SEND_MD_TEMP1_PTR            (32)   // motordriver_temp1   (uint16_t)
+#define SEND_MD_TEMP2_PTR            (34)   // motordriver_temp2   (uint16_t)
+#define SEND_MD_TEMP3_PTR            (36)   // motordriver_temp3   (uint16_t)
+#define SEND_MD_ERR_CODE0_PTR        (38)   // motordriver_error_code0 (uint16_t)
+#define SEND_MD_ERR_CODE1_PTR        (40)   // motordriver_error_code1 (uint16_t)
+#define SEND_MD_ERR_CODE2_PTR        (42)   // motordriver_error_code2 (uint16_t)
+#define SEND_MD_ERR_CODE3_PTR        (44)   // motordriver_error_code3 (uint16_t)
+#define SEND_BUMPER_CONFIG_PTR       (46)   // bumper_config            (uint8_t)
+#define SEND_BRAKE_CONFIG_PTR        (47)   // brake_config             (uint8_t)
+#define SEND_CRST_DATA_READ_ERR_PTR  (59)   // crst01a_data_read_error  (uint8_t)
+#define SEND_PRODUCT_ID_PTR          (60)   // プロダクトID             (uint16_t)
+#define SEND_ROBOT_ID_PTR            (62)   // ロボットID               (uint16_t)
 
 // ----------------------------------------------------------------------------
 // バッファ読み書きヘルパー (内部使用)
@@ -232,27 +233,28 @@ void RosCommSendResponse(PacketSerial *ps, const RosCommSendData *data, bool isI
 		WriteInt16ToBuf(sendBody, SEND_Y_SPEED_PTR,     data->curY);
 		WriteInt16ToBuf(sendBody, SEND_THETA_SPEED_PTR, data->curYaw);
 
-		WriteUint8ToBuf (sendBody, SEND_CTRL_STATUS_PTR,    data->controller_status);
-		WriteUint8ToBuf (sendBody, SEND_CTRL_ERR_PTR,       data->controller_error);
-		WriteUint8ToBuf (sendBody, SEND_MD_ERR_PTR,         data->motordriver_error);
-		WriteUint16ToBuf(sendBody, SEND_DRIVER_VOLTAGE_PTR, data->driver_voltage_raw);
-		WriteUint8ToBuf (sendBody, SEND_HEADLIGHT_PTR,      data->headlight_status);
-		WriteUint8ToBuf (sendBody, SEND_TOWERLIGHT_PTR,     data->towerlight_status);
-		WriteUint8ToBuf (sendBody, SEND_IO_INPUT_PTR,       data->io_input_status);
-		WriteUint32ToBuf(sendBody, SEND_ENCODER0_PTR,       data->encoder_motor[0]);
-		WriteUint32ToBuf(sendBody, SEND_ENCODER1_PTR,       data->encoder_motor[1]);
-		WriteUint32ToBuf(sendBody, SEND_ENCODER2_PTR,       data->encoder_motor[2]);
-		WriteUint32ToBuf(sendBody, SEND_ENCODER3_PTR,       data->encoder_motor[3]);
-		WriteUint16ToBuf(sendBody, SEND_MD_TEMP0_PTR,       data->motordriver_temp[0]);
-		WriteUint16ToBuf(sendBody, SEND_MD_TEMP1_PTR,       data->motordriver_temp[1]);
-		WriteUint16ToBuf(sendBody, SEND_MD_TEMP2_PTR,       data->motordriver_temp[2]);
-		WriteUint16ToBuf(sendBody, SEND_MD_TEMP3_PTR,       data->motordriver_temp[3]);
-		WriteUint16ToBuf(sendBody, SEND_MD_ERR_CODE0_PTR,   data->motordriver_error_code[0]);
-		WriteUint16ToBuf(sendBody, SEND_MD_ERR_CODE1_PTR,   data->motordriver_error_code[1]);
-		WriteUint16ToBuf(sendBody, SEND_MD_ERR_CODE2_PTR,   data->motordriver_error_code[2]);
-		WriteUint16ToBuf(sendBody, SEND_MD_ERR_CODE3_PTR,   data->motordriver_error_code[3]);
-		WriteUint8ToBuf (sendBody, SEND_BUMPER_CONFIG_PTR,  data->bumper_config);
-		WriteUint8ToBuf (sendBody, SEND_BRAKE_CONFIG_PTR,   data->brake_config);
+		WriteUint8ToBuf (sendBody, SEND_CTRL_STATUS_PTR,        data->controller_status);
+		WriteUint8ToBuf (sendBody, SEND_CTRL_ERR_PTR,           data->controller_error);
+		WriteUint8ToBuf (sendBody, SEND_MD_ERR_PTR,             data->motordriver_error);
+		WriteUint16ToBuf(sendBody, SEND_DRIVER_VOLTAGE_PTR,     data->driver_voltage_raw);
+		WriteUint8ToBuf (sendBody, SEND_HEADLIGHT_PTR,          data->headlight_status);
+		WriteUint8ToBuf (sendBody, SEND_TOWERLIGHT_PTR,         data->towerlight_status);
+		WriteUint8ToBuf (sendBody, SEND_IO_INPUT_PTR,           data->io_input_status);
+		WriteUint32ToBuf(sendBody, SEND_ENCODER0_PTR,           data->encoder_motor[0]);
+		WriteUint32ToBuf(sendBody, SEND_ENCODER1_PTR,           data->encoder_motor[1]);
+		WriteUint32ToBuf(sendBody, SEND_ENCODER2_PTR,           data->encoder_motor[2]);
+		WriteUint32ToBuf(sendBody, SEND_ENCODER3_PTR,           data->encoder_motor[3]);
+		WriteUint16ToBuf(sendBody, SEND_MD_TEMP0_PTR,           data->motordriver_temp[0]);
+		WriteUint16ToBuf(sendBody, SEND_MD_TEMP1_PTR,           data->motordriver_temp[1]);
+		WriteUint16ToBuf(sendBody, SEND_MD_TEMP2_PTR,           data->motordriver_temp[2]);
+		WriteUint16ToBuf(sendBody, SEND_MD_TEMP3_PTR,           data->motordriver_temp[3]);
+		WriteUint16ToBuf(sendBody, SEND_MD_ERR_CODE0_PTR,       data->motordriver_error_code[0]);
+		WriteUint16ToBuf(sendBody, SEND_MD_ERR_CODE1_PTR,       data->motordriver_error_code[1]);
+		WriteUint16ToBuf(sendBody, SEND_MD_ERR_CODE2_PTR,       data->motordriver_error_code[2]);
+		WriteUint16ToBuf(sendBody, SEND_MD_ERR_CODE3_PTR,       data->motordriver_error_code[3]);
+		WriteUint8ToBuf (sendBody, SEND_BUMPER_CONFIG_PTR,      data->bumper_config);
+		WriteUint8ToBuf (sendBody, SEND_BRAKE_CONFIG_PTR,       data->brake_config);
+		WriteUint8ToBuf (sendBody, SEND_CRST_DATA_READ_ERR_PTR, data->crst01a_data_read_error);
 	}
 	WriteUint16ToBuf(sendBody, SEND_PRODUCT_ID_PTR, (uint16_t)PRODUCT_ID);
 	WriteUint16ToBuf(sendBody, SEND_ROBOT_ID_PTR,   (uint16_t)ROBOT_ID);
