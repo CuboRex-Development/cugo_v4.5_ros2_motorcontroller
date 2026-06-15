@@ -349,7 +349,7 @@ void OnSerialPacketReceived(const uint8_t *buffer, size_t size) {
 
 	
 	// 非常停止を除くエラーがなく、全データ読み取りが正常な場合のみ速度指令を転送する
-	if (isConnected && !IsCrstErrorActive(ctrlErr, drvErr) && crst01aDataReadState == 0) {
+	if (!IsCrstErrorActive(ctrlErr, drvErr) && crst01aDataReadState == 0) {
 		crst01a.SetMoveSpeed(recvData.xSpeed, recvData.ySpeed, recvData.yawSpeed);
 	} else {
 		crst01a.SetMoveSpeed(0, 0, 0);
