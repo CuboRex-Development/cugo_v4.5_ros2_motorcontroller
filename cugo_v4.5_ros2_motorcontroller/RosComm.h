@@ -75,6 +75,7 @@ typedef struct {
 	uint16_t motordriver_error_code[4];   // body[38-45]: モータドライバエラーコード
 	uint8_t  bumper_config;               // body[46]: バンパー設定値
 	uint8_t  brake_config;                // body[47]: ブレーキ設定値
+	uint8_t  crst01a_data_read_error;     // body[59]: bit0 = データ読み取りエラーあり
 } RosCommSendData;
 
 // ----------------------------------------------------------------------------
