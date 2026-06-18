@@ -30,9 +30,6 @@
 // ----------------------------------------------------------------------------
 // CRST01A定数
 // ----------------------------------------------------------------------------
-// CRST01A初期化待機時間 (ms)
-#define CRST_INIT_WAIT_MS               (200)
-
 // 走行状態 (0x81) データの有効期限 (ms)
 #define CRST_RUN_STATUS_TIMEOUT_MS      (500)
 
@@ -45,6 +42,9 @@
 // バンパー・ブレーキ設定 (0xC4) データの有効期限 (ms) (1秒ごとに要求するため2倍の余裕)
 #define CRST_BUMPER_BRAKE_TIMEOUT_MS    (2000)
 
+// 定期送信コマンド周期設定 50Hz
+#define CRST_CYCLE_REQ_50HZ             (0x02)
+
 // コントローラエラービット (0x80 controller error)
 #define CRST_ERR_CTL_SERIAL_TIMEOUT     (0x40)  // bit6: シリアルタイムアウトエラー
 // 非常停止関連エラービット (CRST01A側で停止を制御するため、速度制限対象外とする)
@@ -53,6 +53,18 @@
 
 // コントローラステータスビット (0x80 controller status)
 #define CRST_STS_CMD_MODE               (0x01)  // bit0: コマンドモード
+
+// CRST01Aデータ読み取りエラービット (crst01aDataReadState)
+// データ未受信またはタイムアウトで該当ビットが1、正常受信で0にクリアされる
+#define CRST_READ_ERR_SYS_STATUS      (0x0001)  // GetSysStatus
+#define CRST_READ_ERR_RUN_STATUS      (0x0002)  // GetReadRunStatus
+#define CRST_READ_ERR_EXT_IO          (0x0004)  // GetExtIo
+#define CRST_READ_ERR_ENCODER         (0x0008)  // GetEncoder
+#define CRST_READ_ERR_MD_TEMP         (0x0010)  // GetMdTemp
+#define CRST_READ_ERR_MD_STATUS       (0x0020)  // GetMdStatus
+#define CRST_READ_ERR_MOTOR_OUT       (0x0040)  // GetMotorOut (予約, 未使用)
+#define CRST_READ_ERR_SBUS            (0x0100)  // GetSbus (予約, 未使用)
+#define CRST_READ_ERR_BUMPER_BRAKE    (0x0200)  // GetBumperBrakeRes
 
 // ----------------------------------------------------------------------------
 // プロトタイプ
@@ -121,6 +133,9 @@ bool handshakeDoneF = false;
 // ライト制御状態キャッシュ (SetLightsが両フィールドを同時に設定するため保持)
 uint8_t g_headlightControl  = 0;
 uint8_t g_towerlightControl = 0;
+
+// CRST01Aデータ読み取りエラー状態 (CRST_READ_ERR_* ビットの論理和、全0で正常)
+uint16_t crst01aDataReadState = 0;
 
 // ----------------------------------------------------------------------------
 // CRST01Aエラー判定
@@ -258,54 +273,67 @@ void OnSerialPacketReceived(const uint8_t *buffer, size_t size) {
 	uint8_t ctrlStatus = 0, ctrlErr = 0, drvErr = 0;
 	uint16_t drvVoltage = 0;
 	uint32_t sysRecvTime;
-	crst01a.GetSysStatus(&ctrlStatus, &ctrlErr, &drvErr, &drvVoltage, &sysRecvTime);
+	bool sysOk = crst01a.GetSysStatus(&ctrlStatus, &ctrlErr, &drvErr, &drvVoltage, &sysRecvTime);
 	bool isConnected = (millis() - sysRecvTime < CRST_SYS_STATUS_TIMEOUT_MS);
-
-	// 非常停止を除くエラーがない場合のみ速度指令を転送する
-	if (isConnected && !IsCrstErrorActive(ctrlErr, drvErr)) {
-		crst01a.SetMoveSpeed(recvData.xSpeed, recvData.ySpeed, recvData.yawSpeed);
+	if (!sysOk || !isConnected) {
+		crst01aDataReadState |= CRST_READ_ERR_SYS_STATUS;
 	} else {
-		crst01a.SetMoveSpeed(0, 0, 0);
+		crst01aDataReadState &= ~CRST_READ_ERR_SYS_STATUS;
 	}
 
 	// 現在速度 (0x81)
 	int16_t curX = 0, curY = 0, curYaw = 0;
 	uint32_t runRecvTime;
-	crst01a.GetReadRunStatus(&curX, &curY, &curYaw, &runRecvTime);
-	if (millis() - runRecvTime >= CRST_RUN_STATUS_TIMEOUT_MS) {
+	bool runOk = crst01a.GetReadRunStatus(&curX, &curY, &curYaw, &runRecvTime);
+	if (!runOk || millis() - runRecvTime >= CRST_RUN_STATUS_TIMEOUT_MS) {
+		crst01aDataReadState |= CRST_READ_ERR_RUN_STATUS;
 		curX = curY = curYaw = 0;
+	} else {
+		crst01aDataReadState &= ~CRST_READ_ERR_RUN_STATUS;
 	}
 
 	// 外部IO (0x84): ヘッドライト・タワーライト状態・4bit入力
 	uint8_t headlightStatus = 0, towerlightStatus = 0, ioInputStatus = 0;
 	uint32_t extIoRecvTime;
-	crst01a.GetExtIo(&headlightStatus, &towerlightStatus, &ioInputStatus, &extIoRecvTime);
-	if (millis() - extIoRecvTime >= CRST_PERIODIC_TIMEOUT_MS) {
+	bool extIoOk = crst01a.GetExtIo(&headlightStatus, &towerlightStatus, &ioInputStatus, &extIoRecvTime);
+	if (!extIoOk || millis() - extIoRecvTime >= CRST_PERIODIC_TIMEOUT_MS) {
+		crst01aDataReadState |= CRST_READ_ERR_EXT_IO;
 		headlightStatus = towerlightStatus = ioInputStatus = 0;
+	} else {
+		crst01aDataReadState &= ~CRST_READ_ERR_EXT_IO;
 	}
 
 	// エンコーダ (0x88, 0x89)
 	uint32_t encoderMotor[4] = {0, 0, 0, 0};
 	uint32_t encoderRecvTime;
-	crst01a.GetEncoder(encoderMotor, &encoderRecvTime);
-	if (millis() - encoderRecvTime >= CRST_PERIODIC_TIMEOUT_MS) {
+	bool encoderOk = crst01a.GetEncoder(encoderMotor, &encoderRecvTime);
+	if (!encoderOk || millis() - encoderRecvTime >= CRST_PERIODIC_TIMEOUT_MS) {
+		crst01aDataReadState |= CRST_READ_ERR_ENCODER;
 		memset(encoderMotor, 0, sizeof(encoderMotor));
+	} else {
+		crst01aDataReadState &= ~CRST_READ_ERR_ENCODER;
 	}
 
 	// モータドライバ温度 (0x8C)
 	uint16_t mdTemp[4] = {0, 0, 0, 0};
 	uint32_t mdTempRecvTime;
-	crst01a.GetMdTemp(mdTemp, &mdTempRecvTime);
-	if (millis() - mdTempRecvTime >= CRST_PERIODIC_TIMEOUT_MS) {
+	bool mdTempOk = crst01a.GetMdTemp(mdTemp, &mdTempRecvTime);
+	if (!mdTempOk || millis() - mdTempRecvTime >= CRST_PERIODIC_TIMEOUT_MS) {
+		crst01aDataReadState |= CRST_READ_ERR_MD_TEMP;
 		memset(mdTemp, 0, sizeof(mdTemp));
+	} else {
+		crst01aDataReadState &= ~CRST_READ_ERR_MD_TEMP;
 	}
 
 	// モータドライバエラーコード (0x8E)
 	uint16_t mdErrCode[4] = {0, 0, 0, 0};
 	uint32_t mdStatusRecvTime;
-	crst01a.GetMdStatus(mdErrCode, &mdStatusRecvTime);
-	if (millis() - mdStatusRecvTime >= CRST_PERIODIC_TIMEOUT_MS) {
+	bool mdStatusOk = crst01a.GetMdStatus(mdErrCode, &mdStatusRecvTime);
+	if (!mdStatusOk || millis() - mdStatusRecvTime >= CRST_PERIODIC_TIMEOUT_MS) {
+		crst01aDataReadState |= CRST_READ_ERR_MD_STATUS;
 		memset(mdErrCode, 0, sizeof(mdErrCode));
+	} else {
+		crst01aDataReadState &= ~CRST_READ_ERR_MD_STATUS;
 	}
 
 	// バンパー・ブレーキ設定 (0xC4, Job1000msで要求済みのキャッシュを使用)
@@ -313,7 +341,18 @@ void OnSerialPacketReceived(const uint8_t *buffer, size_t size) {
 	uint32_t bumperBrakeRecvTime;
 	crst01a.GetBumperBrakeRes(&bumperConfig, &brakeConfig, &bumperBrakeRecvTime);
 	if (bumperBrakeRecvTime == 0 || millis() - bumperBrakeRecvTime >= CRST_BUMPER_BRAKE_TIMEOUT_MS) {
+		crst01aDataReadState |= CRST_READ_ERR_BUMPER_BRAKE;
 		bumperConfig = brakeConfig = 0;
+	} else {
+		crst01aDataReadState &= ~CRST_READ_ERR_BUMPER_BRAKE;
+	}
+
+	
+	// 非常停止を除くエラーがなく、全データ読み取りが正常な場合のみ速度指令を転送する
+	if (!IsCrstErrorActive(ctrlErr, drvErr) && crst01aDataReadState == 0) {
+		crst01a.SetMoveSpeed(recvData.xSpeed, recvData.ySpeed, recvData.yawSpeed);
+	} else {
+		crst01a.SetMoveSpeed(0, 0, 0);
 	}
 
 	// --------------------------------------------------------------------
@@ -335,8 +374,9 @@ void OnSerialPacketReceived(const uint8_t *buffer, size_t size) {
 		sendData.motordriver_temp[i]       = mdTemp[i];
 		sendData.motordriver_error_code[i] = mdErrCode[i];
 	}
-	sendData.bumper_config = bumperConfig;
-	sendData.brake_config  = brakeConfig;
+	sendData.bumper_config           = bumperConfig;
+	sendData.brake_config            = brakeConfig;
+	sendData.crst01a_data_read_error = (crst01aDataReadState != 0) ? 1 : 0;
 
 	RosCommSendResponse(&transport.serial(), &sendData, false);
 }
@@ -375,25 +415,33 @@ void onNewWifiClient(void) {
 void setup() {
 	// CRST01A初期化 (CMDモードへの移行はハンドシェイク後に行う)
 	crst01a.Init();
-	delay(CRST_INIT_WAIT_MS);
 
-	// システムステータス (0x80) の定期受信を有効化 (50Hz)
+	// CRST01A サンプルで使用されている定期ヘルスチェックを無効化
+	crst01a.SetHealthCheckSend(false);
+
+	// CRST01A 定期送信が来なかったときに再度定期送信を有効化する機能を有効化
+	crst01a.SetCycleResend(true);
+
+	// 定期送信コマンドの送信周期を50Hzに設定
+	crst01a.SetCycleReqFrequency(CRST_CYCLE_REQ_50HZ);
+
+	// システムステータス (0x80) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_SYS_STATUS);
 
-	// 走行状態 (0x81) の定期受信を有効化 (50Hz)
+	// 走行状態 (0x81) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_RUN_STATUS);
 
-	// 外部IO (0x84) の定期受信を有効化 (50Hz)
+	// 外部IO (0x84) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_EXT_IO);
 
-	// モータエンコーダ (0x88, 0x89) の定期受信を有効化 (50Hz)
+	// モータエンコーダ (0x88, 0x89) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_ENCODER_01);
 	crst01a.SetCycleReq(CRST_FUNC_READ_ENCODER_23);
 
-	// モータドライバ温度 (0x8C) の定期受信を有効化 (50Hz)
+	// モータドライバ温度 (0x8C) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_MD_TEMP);
 
-	// モータドライバ状態 (0x8E) の定期受信を有効化 (50Hz)
+	// モータドライバ状態 (0x8E) の定期受信を有効化
 	crst01a.SetCycleReq(CRST_FUNC_READ_MD_STATUS);
 
 	// トランスポート初期化 (config.h の 設定 に応じて ポートをひらく)
